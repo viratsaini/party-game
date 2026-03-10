@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://flag_marker_scene"]
+
+[ext_resource type="Script" path="res://games/flag_wars/flag_marker.gd" id="1_script"]
+
+[node name="FlagMarker" type="Node3D"]
+script = ExtResource("1_script")

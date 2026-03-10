@@ -1,0 +1,80 @@
+[gd_scene load_steps=7 format=3 uid="uid://kart_controller_scene"]
+
+[ext_resource type="Script" path="res://games/turbo_karts/kart_controller.gd" id="1_script"]
+
+[sub_resource type="BoxShape3D" id="kart_collision"]
+size = Vector3(1.8, 0.6, 3.2)
+
+[sub_resource type="StandardMaterial3D" id="body_mat"]
+albedo_color = Color(0.2, 0.5, 0.9, 1)
+roughness = 0.5
+
+[sub_resource type="BoxMesh" id="body_mesh"]
+size = Vector3(1.8, 0.6, 3.2)
+material = SubResource("body_mat")
+
+[sub_resource type="StandardMaterial3D" id="wheel_mat"]
+albedo_color = Color(0.15, 0.15, 0.15, 1)
+roughness = 0.9
+
+[sub_resource type="CylinderMesh" id="wheel_mesh"]
+top_radius = 0.25
+bottom_radius = 0.25
+height = 0.15
+material = SubResource("wheel_mat")
+
+[sub_resource type="SceneReplicationConfig" id="sync_config"]
+properties/0/path = NodePath(".:position")
+properties/0/spawn = true
+properties/0/replication_mode = 1
+properties/1/path = NodePath(".:rotation")
+properties/1/spawn = true
+properties/1/replication_mode = 1
+properties/2/path = NodePath(".:velocity")
+properties/2/spawn = true
+properties/2/replication_mode = 1
+properties/3/path = NodePath(".:forward_speed")
+properties/3/spawn = true
+properties/3/replication_mode = 1
+
+[node name="KartController" type="CharacterBody3D"]
+collision_layer = 2
+collision_mask = 1
+script = ExtResource("1_script")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
+shape = SubResource("kart_collision")
+
+[node name="BodyMesh" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
+mesh = SubResource("body_mesh")
+
+[node name="WheelFL" type="MeshInstance3D" parent="."]
+transform = Transform3D(0, 1, 0, -1, 0, 0, 0, 0, 1, -0.85, 0.25, -1.2)
+mesh = SubResource("wheel_mesh")
+
+[node name="WheelFR" type="MeshInstance3D" parent="."]
+transform = Transform3D(0, 1, 0, -1, 0, 0, 0, 0, 1, 0.85, 0.25, -1.2)
+mesh = SubResource("wheel_mesh")
+
+[node name="WheelRL" type="MeshInstance3D" parent="."]
+transform = Transform3D(0, 1, 0, -1, 0, 0, 0, 0, 1, -0.85, 0.25, 1.2)
+mesh = SubResource("wheel_mesh")
+
+[node name="WheelRR" type="MeshInstance3D" parent="."]
+transform = Transform3D(0, 1, 0, -1, 0, 0, 0, 0, 1, 0.85, 0.25, 1.2)
+mesh = SubResource("wheel_mesh")
+
+[node name="NameLabel" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4, 0)
+text = "Player"
+font_size = 32
+billboard = 1
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.868, -0.496, 0, 0.496, 0.868, 0, 4, 7)
+fov = 75.0
+
+[node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
+replication_config = SubResource("sync_config")

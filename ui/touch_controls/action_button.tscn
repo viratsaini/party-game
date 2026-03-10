@@ -1,0 +1,13 @@
+[gd_scene load_steps=2 format=3 uid="uid://c1actionbtn00001"]
+
+[ext_resource type="Script" path="res://ui/touch_controls/action_button.gd" id="1_action_btn"]
+
+[node name="ActionButton" type="Control"]
+custom_minimum_size = Vector2(120, 120)
+anchors_preset = 0
+offset_right = 120.0
+offset_bottom = 120.0
+script = ExtResource("1_action_btn")
+button_text = "A"
+button_color = Color(1, 0.3, 0.3, 0.8)
+button_radius = 50.0

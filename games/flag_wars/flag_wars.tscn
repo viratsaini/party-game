@@ -1,0 +1,311 @@
+[gd_scene load_steps=24 format=3 uid="uid://flag_wars_scene"]
+
+[ext_resource type="Script" path="res://games/flag_wars/flag_wars.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://characters/player_character.tscn" id="2_player"]
+
+[sub_resource type="ProceduralSkyMaterial" id="sky_mat"]
+sky_top_color = Color(0.15, 0.3, 0.6, 1)
+sky_horizon_color = Color(0.5, 0.55, 0.65, 1)
+ground_bottom_color = Color(0.12, 0.1, 0.08, 1)
+ground_horizon_color = Color(0.5, 0.55, 0.65, 1)
+
+[sub_resource type="Sky" id="sky"]
+sky_material = SubResource("sky_mat")
+
+[sub_resource type="Environment" id="env"]
+background_mode = 2
+sky = SubResource("sky")
+ambient_light_source = 2
+ambient_light_color = Color(0.45, 0.45, 0.55, 1)
+ambient_light_energy = 0.6
+tonemap_mode = 2
+
+[sub_resource type="BoxShape3D" id="floor_shape"]
+size = Vector3(60, 0.5, 40)
+
+[sub_resource type="StandardMaterial3D" id="floor_mat"]
+albedo_color = Color(0.3, 0.35, 0.25, 1)
+roughness = 0.85
+
+[sub_resource type="BoxMesh" id="floor_mesh"]
+size = Vector3(60, 0.5, 40)
+material = SubResource("floor_mat")
+
+[sub_resource type="BoxShape3D" id="wall_shape_long"]
+size = Vector3(60, 4, 0.5)
+
+[sub_resource type="BoxShape3D" id="wall_shape_short"]
+size = Vector3(0.5, 4, 40)
+
+[sub_resource type="StandardMaterial3D" id="wall_mat"]
+albedo_color = Color(0.35, 0.35, 0.4, 1)
+roughness = 0.75
+
+[sub_resource type="BoxMesh" id="wall_mesh_long"]
+size = Vector3(60, 4, 0.5)
+material = SubResource("wall_mat")
+
+[sub_resource type="BoxMesh" id="wall_mesh_short"]
+size = Vector3(0.5, 4, 40)
+material = SubResource("wall_mat")
+
+[sub_resource type="StandardMaterial3D" id="red_base_mat"]
+albedo_color = Color(0.7, 0.15, 0.15, 1)
+roughness = 0.7
+
+[sub_resource type="BoxMesh" id="base_platform_mesh"]
+size = Vector3(8, 0.3, 8)
+
+[sub_resource type="BoxShape3D" id="base_platform_shape"]
+size = Vector3(8, 0.3, 8)
+
+[sub_resource type="StandardMaterial3D" id="blue_base_mat"]
+albedo_color = Color(0.15, 0.25, 0.7, 1)
+roughness = 0.7
+
+[sub_resource type="BoxShape3D" id="base_area_shape"]
+size = Vector3(10, 4, 10)
+
+[sub_resource type="BoxShape3D" id="flag_area_shape"]
+size = Vector3(3, 4, 3)
+
+[sub_resource type="BoxShape3D" id="cover_shape"]
+size = Vector3(2, 2.5, 2)
+
+[sub_resource type="StandardMaterial3D" id="cover_mat"]
+albedo_color = Color(0.4, 0.38, 0.32, 1)
+roughness = 0.7
+
+[sub_resource type="BoxMesh" id="cover_mesh"]
+size = Vector3(2, 2.5, 2)
+material = SubResource("cover_mat")
+
+[node name="Game" type="Node3D"]
+script = ExtResource("1_script")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("env")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.866, -0.433, 0.25, 0, 0.5, 0.866, -0.5, -0.75, 0.433, 0, 14, 0)
+light_color = Color(1, 0.95, 0.85, 1)
+light_energy = 1.2
+shadow_enabled = false
+
+[node name="Field" type="Node3D" parent="."]
+
+[node name="Floor" type="StaticBody3D" parent="Field"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Field/Floor"]
+shape = SubResource("floor_shape")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Field/Floor"]
+mesh = SubResource("floor_mesh")
+
+[node name="WallN" type="StaticBody3D" parent="Field"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, -20)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Field/WallN"]
+shape = SubResource("wall_shape_long")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Field/WallN"]
+mesh = SubResource("wall_mesh_long")
+
+[node name="WallS" type="StaticBody3D" parent="Field"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 20)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Field/WallS"]
+shape = SubResource("wall_shape_long")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Field/WallS"]
+mesh = SubResource("wall_mesh_long")
+
+[node name="WallE" type="StaticBody3D" parent="Field"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 2, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Field/WallE"]
+shape = SubResource("wall_shape_short")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Field/WallE"]
+mesh = SubResource("wall_mesh_short")
+
+[node name="WallW" type="StaticBody3D" parent="Field"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -30, 2, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Field/WallW"]
+shape = SubResource("wall_shape_short")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Field/WallW"]
+mesh = SubResource("wall_mesh_short")
+
+[node name="RedBase" type="Node3D" parent="Field"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25, 0, 0)
+
+[node name="Platform" type="StaticBody3D" parent="Field/RedBase"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Field/RedBase/Platform"]
+shape = SubResource("base_platform_shape")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Field/RedBase/Platform"]
+mesh = SubResource("base_platform_mesh")
+surface_material_override/0 = SubResource("red_base_mat")
+
+[node name="FlagSpawn" type="Marker3D" parent="Field/RedBase"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+
+[node name="FlagArea" type="Area3D" parent="Field/RedBase"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+collision_layer = 0
+collision_mask = 1
+monitoring = true
+monitorable = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Field/RedBase/FlagArea"]
+shape = SubResource("flag_area_shape")
+
+[node name="BaseArea" type="Area3D" parent="Field/RedBase"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+collision_layer = 0
+collision_mask = 1
+monitoring = true
+monitorable = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Field/RedBase/BaseArea"]
+shape = SubResource("base_area_shape")
+
+[node name="BlueBase" type="Node3D" parent="Field"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25, 0, 0)
+
+[node name="Platform" type="StaticBody3D" parent="Field/BlueBase"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Field/BlueBase/Platform"]
+shape = SubResource("base_platform_shape")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Field/BlueBase/Platform"]
+mesh = SubResource("base_platform_mesh")
+surface_material_override/0 = SubResource("blue_base_mat")
+
+[node name="FlagSpawn" type="Marker3D" parent="Field/BlueBase"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+
+[node name="FlagArea" type="Area3D" parent="Field/BlueBase"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+collision_layer = 0
+collision_mask = 1
+monitoring = true
+monitorable = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Field/BlueBase/FlagArea"]
+shape = SubResource("flag_area_shape")
+
+[node name="BaseArea" type="Area3D" parent="Field/BlueBase"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+collision_layer = 0
+collision_mask = 1
+monitoring = true
+monitorable = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Field/BlueBase/BaseArea"]
+shape = SubResource("base_area_shape")
+
+[node name="Cover1" type="StaticBody3D" parent="Field"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 1.25, 8)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Field/Cover1"]
+shape = SubResource("cover_shape")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Field/Cover1"]
+mesh = SubResource("cover_mesh")
+
+[node name="Cover2" type="StaticBody3D" parent="Field"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 1.25, -8)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Field/Cover2"]
+shape = SubResource("cover_shape")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Field/Cover2"]
+mesh = SubResource("cover_mesh")
+
+[node name="Cover3" type="StaticBody3D" parent="Field"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 1.25, 8)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Field/Cover3"]
+shape = SubResource("cover_shape")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Field/Cover3"]
+mesh = SubResource("cover_mesh")
+
+[node name="Cover4" type="StaticBody3D" parent="Field"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 1.25, -8)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Field/Cover4"]
+shape = SubResource("cover_shape")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Field/Cover4"]
+mesh = SubResource("cover_mesh")
+
+[node name="Cover5" type="StaticBody3D" parent="Field"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 12)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Field/Cover5"]
+shape = SubResource("cover_shape")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Field/Cover5"]
+mesh = SubResource("cover_mesh")
+
+[node name="Cover6" type="StaticBody3D" parent="Field"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, -12)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Field/Cover6"]
+shape = SubResource("cover_shape")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Field/Cover6"]
+mesh = SubResource("cover_mesh")
+
+[node name="CoverCenter" type="StaticBody3D" parent="Field"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Field/CoverCenter"]
+shape = SubResource("cover_shape")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Field/CoverCenter"]
+mesh = SubResource("cover_mesh")
+
+[node name="SpawnPoints" type="Node3D" parent="."]
+
+[node name="RedSpawns" type="Node3D" parent="SpawnPoints"]
+
+[node name="RedSpawn1" type="Marker3D" parent="SpawnPoints/RedSpawns"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22, 1, 6)
+
+[node name="RedSpawn2" type="Marker3D" parent="SpawnPoints/RedSpawns"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22, 1, -6)
+
+[node name="RedSpawn3" type="Marker3D" parent="SpawnPoints/RedSpawns"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, 1, 0)
+
+[node name="RedSpawn4" type="Marker3D" parent="SpawnPoints/RedSpawns"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24, 1, 0)
+
+[node name="BlueSpawns" type="Node3D" parent="SpawnPoints"]
+
+[node name="BlueSpawn1" type="Marker3D" parent="SpawnPoints/BlueSpawns"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 1, 6)
+
+[node name="BlueSpawn2" type="Marker3D" parent="SpawnPoints/BlueSpawns"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 1, -6)
+
+[node name="BlueSpawn3" type="Marker3D" parent="SpawnPoints/BlueSpawns"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 1, 0)
+
+[node name="BlueSpawn4" type="Marker3D" parent="SpawnPoints/BlueSpawns"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, 1, 0)
+
+[node name="Players" type="Node3D" parent="."]
+
+[node name="PlayerSpawner" type="MultiplayerSpawner" parent="."]
+_spawnable_scenes = PackedStringArray("res://characters/player_character.tscn")
+spawn_path = NodePath("../Players")

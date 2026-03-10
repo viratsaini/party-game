@@ -1,0 +1,50 @@
+[gd_scene load_steps=2 format=3 uid="uid://ab_projectile01"]
+
+[ext_resource type="Script" path="res://games/arena_blaster/projectile.gd" id="1_script"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_col"]
+radius = 0.15
+
+[sub_resource type="SphereMesh" id="SphereMesh_vis"]
+radius = 0.15
+height = 0.3
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_emission"]
+albedo_color = Color(1, 0.3, 0.2, 1)
+emission_enabled = true
+emission = Color(1, 0.3, 0.2, 1)
+emission_energy_multiplier = 2.0
+
+[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_proj"]
+properties/0/path = NodePath(".:position")
+properties/0/spawn = true
+properties/0/replication_mode = 1
+properties/1/path = NodePath(".:direction")
+properties/1/spawn = true
+properties/1/replication_mode = 0
+properties/2/path = NodePath(".:owner_peer_id")
+properties/2/spawn = true
+properties/2/replication_mode = 0
+properties/3/path = NodePath(".:projectile_color")
+properties/3/spawn = true
+properties/3/replication_mode = 0
+
+[node name="Projectile" type="Area3D"]
+collision_layer = 2
+collision_mask = 1
+script = ExtResource("1_script")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("SphereShape3D_col")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+mesh = SubResource("SphereMesh_vis")
+material_override = SubResource("StandardMaterial3D_emission")
+
+[node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
+replication_config = SubResource("SceneReplicationConfig_proj")
+
+[node name="LifetimeTimer" type="Timer" parent="."]
+wait_time = 3.0
+one_shot = true
+autostart = true

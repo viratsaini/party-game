@@ -1,0 +1,42 @@
+[gd_scene load_steps=2 format=3 uid="uid://ab_pickup00001"]
+
+[ext_resource type="Script" path="res://games/arena_blaster/pickup.gd" id="1_script"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_trigger"]
+radius = 0.5
+
+[sub_resource type="BoxMesh" id="BoxMesh_visual"]
+size = Vector3(0.5, 0.5, 0.5)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_pickup"]
+albedo_color = Color(0.2, 1, 0.3, 1)
+emission_enabled = true
+emission = Color(0.2, 1, 0.3, 1)
+emission_energy_multiplier = 1.5
+
+[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_pickup"]
+properties/0/path = NodePath(".:visible")
+properties/0/spawn = true
+properties/0/replication_mode = 1
+properties/1/path = NodePath(".:pickup_type")
+properties/1/spawn = true
+properties/1/replication_mode = 0
+
+[node name="Pickup" type="Area3D"]
+collision_layer = 4
+collision_mask = 1
+script = ExtResource("1_script")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("SphereShape3D_trigger")
+
+[node name="PickupMesh" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_visual")
+material_override = SubResource("StandardMaterial3D_pickup")
+
+[node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
+replication_config = SubResource("SceneReplicationConfig_pickup")
+
+[node name="RespawnTimer" type="Timer" parent="."]
+wait_time = 10.0
+one_shot = true

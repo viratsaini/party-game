@@ -1,0 +1,27 @@
+# Godot 4+ specific ignores
+.godot/
+
+# Godot-specific ignores
+*.translation
+
+# Imported textures, models, etc.
+.import/
+
+# Export files
+export/*.apk
+export/*.aab
+export/*.idsig
+export/*.apk.idsig
+
+# Android build artifacts
+android/build/.gradle/
+android/build/build/
+android/build/libs/
+android/build/gradle/
+android/build/gradlew
+android/build/gradlew.bat
+
+# OS generated files
+.DS_Store
+Thumbs.db
+desktop.ini

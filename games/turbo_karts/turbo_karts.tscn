@@ -1,0 +1,273 @@
+[gd_scene load_steps=20 format=3 uid="uid://turbo_karts_scene"]
+
+[ext_resource type="Script" path="res://games/turbo_karts/turbo_karts.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://games/turbo_karts/kart_controller.tscn" id="2_kart"]
+
+[sub_resource type="ProceduralSkyMaterial" id="sky_mat"]
+sky_top_color = Color(0.3, 0.5, 0.85, 1)
+sky_horizon_color = Color(0.65, 0.7, 0.8, 1)
+ground_bottom_color = Color(0.2, 0.18, 0.15, 1)
+ground_horizon_color = Color(0.65, 0.7, 0.8, 1)
+
+[sub_resource type="Sky" id="sky_res"]
+sky_material = SubResource("sky_mat")
+
+[sub_resource type="Environment" id="env_res"]
+background_mode = 2
+sky = SubResource("sky_res")
+ambient_light_source = 2
+ambient_light_color = Color(0.55, 0.55, 0.6, 1)
+ambient_light_energy = 0.7
+tonemap_mode = 2
+
+[sub_resource type="StandardMaterial3D" id="ground_mat"]
+albedo_color = Color(0.22, 0.22, 0.25, 1)
+roughness = 0.9
+
+[sub_resource type="BoxShape3D" id="ground_shape"]
+size = Vector3(80, 0.5, 60)
+
+[sub_resource type="BoxMesh" id="ground_mesh"]
+size = Vector3(80, 0.5, 60)
+material = SubResource("ground_mat")
+
+[sub_resource type="StandardMaterial3D" id="wall_mat"]
+albedo_color = Color(0.8, 0.25, 0.2, 1)
+roughness = 0.7
+
+[sub_resource type="BoxShape3D" id="outer_wall_x_shape"]
+size = Vector3(80, 2.5, 0.5)
+
+[sub_resource type="BoxMesh" id="outer_wall_x_mesh"]
+size = Vector3(80, 2.5, 0.5)
+material = SubResource("wall_mat")
+
+[sub_resource type="BoxShape3D" id="outer_wall_z_shape"]
+size = Vector3(0.5, 2.5, 60)
+
+[sub_resource type="BoxMesh" id="outer_wall_z_mesh"]
+size = Vector3(0.5, 2.5, 60)
+material = SubResource("wall_mat")
+
+[sub_resource type="StandardMaterial3D" id="inner_wall_mat"]
+albedo_color = Color(0.45, 0.45, 0.5, 1)
+roughness = 0.75
+
+[sub_resource type="BoxShape3D" id="inner_wall_x_shape"]
+size = Vector3(50, 2, 0.5)
+
+[sub_resource type="BoxMesh" id="inner_wall_x_mesh"]
+size = Vector3(50, 2, 0.5)
+material = SubResource("inner_wall_mat")
+
+[sub_resource type="BoxShape3D" id="inner_wall_z_shape"]
+size = Vector3(0.5, 2, 28)
+
+[sub_resource type="BoxMesh" id="inner_wall_z_mesh"]
+size = Vector3(0.5, 2, 28)
+material = SubResource("inner_wall_mat")
+
+[sub_resource type="BoxShape3D" id="cp_ns_shape"]
+size = Vector3(0.5, 4, 16)
+
+[sub_resource type="BoxShape3D" id="cp_ew_shape"]
+size = Vector3(16, 4, 0.5)
+
+[node name="Game" type="Node3D"]
+script = ExtResource("1_script")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("env_res")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.866, -0.433, 0.25, 0, 0.5, 0.866, -0.5, -0.75, 0.433, 0, 20, 0)
+light_color = Color(1, 0.96, 0.88, 1)
+light_energy = 1.3
+shadow_enabled = false
+
+[node name="Track" type="Node3D" parent="."]
+
+[node name="Floor" type="StaticBody3D" parent="Track"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Track/Floor"]
+shape = SubResource("ground_shape")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Track/Floor"]
+mesh = SubResource("ground_mesh")
+
+[node name="OuterWallN" type="StaticBody3D" parent="Track"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, -30)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Track/OuterWallN"]
+shape = SubResource("outer_wall_x_shape")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Track/OuterWallN"]
+mesh = SubResource("outer_wall_x_mesh")
+
+[node name="OuterWallS" type="StaticBody3D" parent="Track"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 30)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Track/OuterWallS"]
+shape = SubResource("outer_wall_x_shape")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Track/OuterWallS"]
+mesh = SubResource("outer_wall_x_mesh")
+
+[node name="OuterWallE" type="StaticBody3D" parent="Track"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 1.25, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Track/OuterWallE"]
+shape = SubResource("outer_wall_z_shape")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Track/OuterWallE"]
+mesh = SubResource("outer_wall_z_mesh")
+
+[node name="OuterWallW" type="StaticBody3D" parent="Track"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -40, 1.25, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Track/OuterWallW"]
+shape = SubResource("outer_wall_z_shape")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Track/OuterWallW"]
+mesh = SubResource("outer_wall_z_mesh")
+
+[node name="InnerWallN" type="StaticBody3D" parent="Track"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -14)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Track/InnerWallN"]
+shape = SubResource("inner_wall_x_shape")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Track/InnerWallN"]
+mesh = SubResource("inner_wall_x_mesh")
+
+[node name="InnerWallS" type="StaticBody3D" parent="Track"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 14)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Track/InnerWallS"]
+shape = SubResource("inner_wall_x_shape")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Track/InnerWallS"]
+mesh = SubResource("inner_wall_x_mesh")
+
+[node name="InnerWallE" type="StaticBody3D" parent="Track"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25, 1, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Track/InnerWallE"]
+shape = SubResource("inner_wall_z_shape")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Track/InnerWallE"]
+mesh = SubResource("inner_wall_z_mesh")
+
+[node name="InnerWallW" type="StaticBody3D" parent="Track"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25, 1, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Track/InnerWallW"]
+shape = SubResource("inner_wall_z_shape")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Track/InnerWallW"]
+mesh = SubResource("inner_wall_z_mesh")
+
+[node name="Checkpoints" type="Node3D" parent="."]
+
+[node name="Checkpoint0" type="Area3D" parent="Checkpoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32, 2, 0)
+collision_layer = 0
+collision_mask = 2
+monitoring = true
+monitorable = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Checkpoints/Checkpoint0"]
+shape = SubResource("cp_ew_shape")
+
+[node name="Checkpoint1" type="Area3D" parent="Checkpoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, -22)
+collision_layer = 0
+collision_mask = 2
+monitoring = true
+monitorable = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Checkpoints/Checkpoint1"]
+shape = SubResource("cp_ns_shape")
+
+[node name="Checkpoint2" type="Area3D" parent="Checkpoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -32, 2, 0)
+collision_layer = 0
+collision_mask = 2
+monitoring = true
+monitorable = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Checkpoints/Checkpoint2"]
+shape = SubResource("cp_ew_shape")
+
+[node name="Checkpoint3" type="Area3D" parent="Checkpoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 2, 22)
+collision_layer = 0
+collision_mask = 2
+monitoring = true
+monitorable = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Checkpoints/Checkpoint3"]
+shape = SubResource("cp_ns_shape")
+
+[node name="LapLine" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 2, 22)
+collision_layer = 0
+collision_mask = 2
+monitoring = true
+monitorable = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="LapLine"]
+shape = SubResource("cp_ns_shape")
+
+[node name="SpawnPoints" type="Node3D" parent="."]
+
+[node name="Spawn1" type="Marker3D" parent="SpawnPoints"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -3, 0.5, 19)
+
+[node name="Spawn2" type="Marker3D" parent="SpawnPoints"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -3, 0.5, 25)
+
+[node name="Spawn3" type="Marker3D" parent="SpawnPoints"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -7, 0.5, 19)
+
+[node name="Spawn4" type="Marker3D" parent="SpawnPoints"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -7, 0.5, 25)
+
+[node name="Spawn5" type="Marker3D" parent="SpawnPoints"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -11, 0.5, 19)
+
+[node name="Spawn6" type="Marker3D" parent="SpawnPoints"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -11, 0.5, 25)
+
+[node name="Spawn7" type="Marker3D" parent="SpawnPoints"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -15, 0.5, 19)
+
+[node name="Spawn8" type="Marker3D" parent="SpawnPoints"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -15, 0.5, 25)
+
+[node name="PowerUpSpawns" type="Node3D" parent="."]
+
+[node name="PU1" type="Marker3D" parent="PowerUpSpawns"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0.5, 22)
+
+[node name="PU2" type="Marker3D" parent="PowerUpSpawns"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 35, 0.5, -8)
+
+[node name="PU3" type="Marker3D" parent="PowerUpSpawns"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0.5, -22)
+
+[node name="PU4" type="Marker3D" parent="PowerUpSpawns"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 0.5, -22)
+
+[node name="PU5" type="Marker3D" parent="PowerUpSpawns"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -35, 0.5, 8)
+
+[node name="PU6" type="Marker3D" parent="PowerUpSpawns"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, 0.5, 22)
+
+[node name="Players" type="Node3D" parent="."]
+
+[node name="PlayerSpawner" type="MultiplayerSpawner" parent="."]
+_spawnable_scenes = PackedStringArray("res://games/turbo_karts/kart_controller.tscn")
+spawn_path = NodePath("../Players")

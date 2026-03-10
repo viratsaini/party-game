@@ -1,0 +1,141 @@
+[gd_scene load_steps=2 format=3 uid="uid://c1charselect001"]
+
+[ext_resource type="Script" path="res://ui/character_select/character_select.gd" id="1_script"]
+
+[node name="CharacterSelect" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.06, 0.06, 0.12, 1)
+
+[node name="Title" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -250.0
+offset_top = 30.0
+offset_right = 250.0
+offset_bottom = 80.0
+grow_horizontal = 2
+text = "SELECT CHARACTER"
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_font_sizes/font_size = 38
+
+[node name="CharacterGrid" type="GridContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -300.0
+offset_top = -200.0
+offset_right = 300.0
+offset_bottom = 100.0
+grow_horizontal = 2
+grow_vertical = 2
+columns = 3
+theme_override_constants/h_separation = 12
+theme_override_constants/v_separation = 12
+
+[node name="PlayerList" type="VBoxContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -280.0
+offset_top = 100.0
+offset_right = -10.0
+offset_bottom = 500.0
+grow_horizontal = 0
+theme_override_constants/separation = 8
+
+[node name="PlayerListTitle" type="Label" parent="PlayerList"]
+layout_mode = 2
+text = "Players"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 28
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+
+[node name="BottomButtons" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = -90.0
+offset_right = -20.0
+offset_bottom = -20.0
+grow_vertical = 0
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="BackButton" type="Button" parent="BottomButtons"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(160, 65)
+text = "BACK"
+theme_override_font_sizes/font_size = 26
+
+[node name="ReadyButton" type="Button" parent="BottomButtons"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(160, 65)
+toggle_mode = true
+text = "READY"
+theme_override_font_sizes/font_size = 26
+
+[node name="StartButton" type="Button" parent="BottomButtons"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(200, 65)
+text = "START GAME"
+theme_override_font_sizes/font_size = 26
+
+[node name="GamePicker" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -220.0
+offset_top = -240.0
+offset_right = 220.0
+offset_bottom = 240.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="GamePicker"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="PickTitle" type="Label" parent="GamePicker/VBox"]
+layout_mode = 2
+text = "Choose Mini-Game"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 30
+
+[node name="GameList" type="VBoxContainer" parent="GamePicker/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 10
