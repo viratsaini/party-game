@@ -1,6 +1,7 @@
-## Hit marker visual feedback system.
+## Hit marker visual feedback system with premium features.
 ## Shows confirmation when player successfully hits an enemy.
 ## Supports different styles for regular hits, headshots, and kills.
+## Features: combo tracking, damage numbers, expanding animations, screen effects.
 class_name HitMarker
 extends Control
 
@@ -30,8 +31,30 @@ const LINE_THICKNESS: float = 2.5
 ## Gap from center.
 const CENTER_GAP: float = 6.0
 
+## Damage number settings.
+const DAMAGE_NUMBER_RISE_SPEED: float = 100.0
+const DAMAGE_NUMBER_FADE_TIME: float = 0.8
+const DAMAGE_NUMBER_COLOR: Color = Color(1.0, 0.9, 0.3, 1.0)
+
+## Combo settings.
+const COMBO_WINDOW: float = 3.0  ## Time window to maintain combo.
+const COMBO_COLOR: Color = Color(0.3, 0.8, 1.0, 1.0)
+
 ## Active hit markers with animation state.
 var _active_markers: Array[Dictionary] = []
+
+## Floating damage numbers.
+## Each entry: {damage: float, position: Vector2, velocity: Vector2, alpha: float}
+var _damage_numbers: Array[Dictionary] = []
+
+## Current combo count.
+var _combo_count: int = 0
+
+## Time since last hit (for combo tracking).
+var _time_since_last_hit: float = 0.0
+
+## Combo display alpha (fades in/out).
+var _combo_alpha: float = 0.0
 
 ## Cached center position.
 var _center: Vector2 = Vector2.ZERO
@@ -54,18 +77,43 @@ func _process(delta: float) -> void:
 
 		i -= 1
 
-	if not _active_markers.is_empty():
+	# Update damage numbers.
+	i = _damage_numbers.size() - 1
+	while i >= 0:
+		var dmg_num: Dictionary = _damage_numbers[i]
+		dmg_num["position"] = (dmg_num["position"] as Vector2) + (dmg_num["velocity"] as Vector2) * delta
+		dmg_num["alpha"] = (dmg_num["alpha"] as float) - delta / DAMAGE_NUMBER_FADE_TIME
+
+		if dmg_num["alpha"] <= 0.0:
+			_damage_numbers.remove_at(i)
+		i -= 1
+
+	# Update combo timer.
+	_time_since_last_hit += delta
+	if _time_since_last_hit > COMBO_WINDOW:
+		_combo_count = 0
+		_combo_alpha = maxf(_combo_alpha - delta * 2.0, 0.0)
+	else:
+		_combo_alpha = minf(_combo_alpha + delta * 4.0, 1.0)
+
+	if not _active_markers.is_empty() or not _damage_numbers.is_empty() or _combo_alpha > 0.01:
 		queue_redraw()
 
 
 func _draw() -> void:
-	if _active_markers.is_empty():
-		return
-
 	_center = size * 0.5
 
+	# Draw active hit markers.
 	for marker: Dictionary in _active_markers:
 		_draw_marker(marker)
+
+	# Draw damage numbers.
+	for dmg_num: Dictionary in _damage_numbers:
+		_draw_damage_number(dmg_num)
+
+	# Draw combo counter if active.
+	if _combo_count > 1 and _combo_alpha > 0.01:
+		_draw_combo_counter()
 
 
 ## Draw a single hit marker.
@@ -150,9 +198,51 @@ func _get_color_for_type(hit_type: HitType) -> Color:
 			return NORMAL_COLOR
 
 
+## Draw a floating damage number.
+func _draw_damage_number(dmg_num: Dictionary) -> void:
+	var damage: float = dmg_num["damage"] as float
+	var pos: Vector2 = dmg_num["position"] as Vector2
+	var alpha: float = dmg_num["alpha"] as float
+
+	var color: Color = DAMAGE_NUMBER_COLOR
+	color.a *= alpha
+
+	var text: String = str(int(damage))
+	var font_size: int = 24
+
+	# Draw outline for visibility.
+	var outline_color: Color = Color.BLACK
+	outline_color.a = alpha * 0.8
+
+	for offset: Vector2 in [Vector2(-1, -1), Vector2(1, -1), Vector2(-1, 1), Vector2(1, 1)]:
+		draw_string(ThemeDB.fallback_font, pos + offset, text, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size, outline_color)
+
+	draw_string(ThemeDB.fallback_font, pos, text, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size, color)
+
+
+## Draw the combo counter.
+func _draw_combo_counter() -> void:
+	var combo_text: String = "x%d COMBO" % _combo_count
+	var combo_pos: Vector2 = _center + Vector2(0, 60)
+
+	var color: Color = COMBO_COLOR
+	color.a *= _combo_alpha
+
+	var font_size: int = 28
+
+	# Outline for visibility.
+	var outline_color: Color = Color.BLACK
+	outline_color.a = _combo_alpha * 0.9
+
+	for offset: Vector2 in [Vector2(-2, -2), Vector2(2, -2), Vector2(-2, 2), Vector2(2, 2)]:
+		draw_string(ThemeDB.fallback_font, combo_pos + offset, combo_text, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size, outline_color)
+
+	draw_string(ThemeDB.fallback_font, combo_pos, combo_text, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size, color)
+
+
 ## Show a hit marker.
 ## [param hit_type] Type of hit for visual style.
-## [param damage] Damage amount (affects size slightly).
+## [param damage] Damage amount (affects size and shows damage number).
 func show_hit(hit_type: HitType = HitType.NORMAL, damage: float = 25.0) -> void:
 	var duration: float = MARKER_DURATION
 	if hit_type == HitType.KILL:
@@ -171,7 +261,33 @@ func show_hit(hit_type: HitType = HitType.NORMAL, damage: float = 25.0) -> void:
 		"size_scale": size_scale,
 	})
 
+	# Add floating damage number.
+	if damage > 0.0:
+		_add_damage_number(damage)
+
+	# Update combo tracking.
+	_increment_combo()
+
 	queue_redraw()
+
+
+## Internal: Add a floating damage number.
+func _add_damage_number(damage: float) -> void:
+	# Randomize position slightly for variety.
+	var offset: Vector2 = Vector2(randf_range(-20, 20), randf_range(-10, 10))
+
+	_damage_numbers.append({
+		"damage": damage,
+		"position": _center + offset,
+		"velocity": Vector2(0, -DAMAGE_NUMBER_RISE_SPEED),
+		"alpha": 1.0,
+	})
+
+
+## Internal: Increment combo counter.
+func _increment_combo() -> void:
+	_combo_count += 1
+	_time_since_last_hit = 0.0
 
 
 ## Convenience methods for specific hit types.
@@ -194,4 +310,21 @@ func show_assist(damage: float = 25.0) -> void:
 ## Clear all active markers.
 func clear() -> void:
 	_active_markers.clear()
+	_damage_numbers.clear()
+	_combo_count = 0
+	_combo_alpha = 0.0
+	_time_since_last_hit = 0.0
 	queue_redraw()
+
+
+## Reset combo counter (e.g., when round ends).
+func reset_combo() -> void:
+	_combo_count = 0
+	_combo_alpha = 0.0
+	_time_since_last_hit = 0.0
+
+
+## Get current combo count.
+func get_combo_count() -> int:
+	return _combo_count
+
