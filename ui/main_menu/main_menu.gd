@@ -74,8 +74,16 @@ const IDLE_FLOAT_AMPLITUDE: float = 2.0
 
 # Visual effects
 const PARALLAX_STRENGTH: float = 15.0
-const MAGNETIC_SNAP_RADIUS: float = 80.0
-const MAGNETIC_SNAP_STRENGTH: float = 0.15
+const MAGNETIC_SNAP_RADIUS: float = 120.0
+const MAGNETIC_SNAP_STRENGTH: float = 0.25
+
+# Round 2 - Advanced effect constants
+const CHROMATIC_HOVER_INTENSITY: float = 0.008
+const HOLOGRAPHIC_SCAN_SPEED: float = 3.0
+const CURSOR_DISTORTION_RADIUS: float = 0.12
+const SHOCKWAVE_DURATION: float = 0.5
+const INDIVIDUAL_BREATH_SPEED_MIN: float = 0.7
+const INDIVIDUAL_BREATH_SPEED_MAX: float = 1.3
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -90,6 +98,8 @@ var _player_name: String = "Player"
 
 ## Effect systems
 var _particles: Control = null
+var _advanced_particles: Control = null
+var _fx_manager: Node = null
 var _button_glows: Dictionary = {}
 var _panel_glows: Dictionary = {}
 var _idle_tweens: Dictionary = {}
@@ -97,6 +107,9 @@ var _idle_tweens: Dictionary = {}
 ## Parallax state
 var _parallax_layers: Array[Control] = []
 var _mouse_pos: Vector2 = Vector2.ZERO
+var _last_mouse_pos: Vector2 = Vector2.ZERO
+var _mouse_velocity: Vector2 = Vector2.ZERO
+var _mouse_speed: float = 0.0
 
 ## Button original positions (for magnetic snap)
 var _button_original_positions: Dictionary = {}
@@ -108,6 +121,19 @@ var _active_panel: PanelContainer = null
 var _grid_offset: float = 0.0
 var _vignette_pulse: float = 0.0
 
+## Round 2 - Advanced state
+var _background_shader_material: ShaderMaterial = null
+var _title_shader_material: ShaderMaterial = null
+var _button_breath_speeds: Dictionary = {}
+var _button_breath_phases: Dictionary = {}
+var _chromatic_hover_buttons: Dictionary = {}
+var _constellation_active: bool = false
+var _energy_pulse_active: bool = false
+var _time_of_day_hours: float = 12.0
+var _use_system_time: bool = true
+var _animation_seen_counts: Dictionary = {}
+var _button_use_counts: Dictionary = {}
+
 
 # ══════════════════════════════════════════════════════════════════════════════
 # LIFECYCLE
@@ -117,6 +143,7 @@ func _ready() -> void:
 	_load_player_profile()
 	_setup_ui()
 	_setup_effects()
+	_setup_round2_effects()
 	_connect_signals()
 
 	# Start LAN discovery so we can list available games.
@@ -137,6 +164,9 @@ func _ready() -> void:
 	if is_instance_valid(NotificationManager):
 		NotificationManager.show_info("Welcome to BattleZone Party!")
 
+	# Start constellation background effect
+	_start_constellation_effect()
+
 
 func _exit_tree() -> void:
 	ConnectionManager.lan_game_discovered.disconnect(_on_discovered_game)
@@ -145,12 +175,17 @@ func _exit_tree() -> void:
 
 	# Cleanup effects
 	_cleanup_effects()
+	_cleanup_round2_effects()
 
 
 func _process(delta: float) -> void:
+	_update_mouse_state(delta)
 	_update_parallax(delta)
 	_update_background_effects(delta)
 	_update_magnetic_snap()
+	_update_cursor_trail()
+	_update_time_of_day()
+	_update_button_breathing(delta)
 	queue_redraw()
 
 
@@ -348,6 +383,339 @@ func _cleanup_effects() -> void:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
+# ROUND 2 - ADVANCED EFFECTS SETUP
+# ══════════════════════════════════════════════════════════════════════════════
+
+func _setup_round2_effects() -> void:
+	# Create advanced particle system
+	_advanced_particles = AdvancedParticlesV2Class.new()
+	_advanced_particles.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(_advanced_particles)
+	move_child(_advanced_particles, 2)  # Above basic particles
+
+	# Create FX manager
+	_fx_manager = MenuFXManagerClass.new()
+	add_child(_fx_manager)
+	_fx_manager.initialize(_particles, _advanced_particles)
+
+	# Setup background shader
+	_setup_background_shader()
+
+	# Setup holographic title effect
+	_setup_holographic_title()
+
+	# Initialize individual button breathing
+	_setup_individual_button_breathing()
+
+	# Register buttons for magnetic snap with FX manager
+	_register_magnetic_buttons()
+
+	# Start background sections
+	_advanced_particles.start_section("background", Rect2(Vector2.ZERO, size))
+
+
+func _setup_background_shader() -> void:
+	# Load advanced shader
+	var shader := load("res://ui/main_menu/advanced_menu_shaders.gdshader")
+	if shader == null:
+		push_warning("MainMenu: Could not load advanced_menu_shaders.gdshader")
+		return
+
+	_background_shader_material = ShaderMaterial.new()
+	_background_shader_material.shader = shader
+
+	# Configure shader parameters
+	_background_shader_material.set_shader_parameter("enable_background_fx", true)
+	_background_shader_material.set_shader_parameter("enable_constellation", true)
+	_background_shader_material.set_shader_parameter("enable_energy_field", true)
+	_background_shader_material.set_shader_parameter("enable_color_grading", true)
+
+	# Set initial time of day
+	_update_shader_time_of_day()
+
+
+func _setup_holographic_title() -> void:
+	var title: Label = title_container.get_node_or_null("Title")
+	if title == null:
+		return
+
+	# Load holographic shader
+	var shader := load("res://shared/shaders/holographic.gdshader")
+	if shader == null:
+		return
+
+	_title_shader_material = ShaderMaterial.new()
+	_title_shader_material.shader = shader
+
+	# Configure holographic effect
+	_title_shader_material.set_shader_parameter("shimmer_speed", HOLOGRAPHIC_SCAN_SPEED)
+	_title_shader_material.set_shader_parameter("shimmer_width", 0.12)
+	_title_shader_material.set_shader_parameter("shimmer_intensity", 0.7)
+	_title_shader_material.set_shader_parameter("saturation", 0.6)
+	_title_shader_material.set_shader_parameter("rainbow_frequency", 2.5)
+	_title_shader_material.set_shader_parameter("enabled", true)
+
+	title.material = _title_shader_material
+
+
+func _setup_individual_button_breathing() -> void:
+	var buttons: Array[Button] = [create_button, join_button, settings_button, quit_button]
+
+	for button in buttons:
+		if button == null:
+			continue
+
+		# Each button gets a unique breathing speed and phase
+		_button_breath_speeds[button] = randf_range(INDIVIDUAL_BREATH_SPEED_MIN, INDIVIDUAL_BREATH_SPEED_MAX)
+		_button_breath_phases[button] = randf() * TAU
+
+
+func _register_magnetic_buttons() -> void:
+	if _fx_manager == null:
+		return
+
+	var buttons: Array[Button] = [create_button, join_button, settings_button, quit_button]
+	for button in buttons:
+		if button != null:
+			_fx_manager.register_magnetic_button(button)
+
+
+func _cleanup_round2_effects() -> void:
+	if _advanced_particles:
+		_advanced_particles.clear_all()
+
+	_background_shader_material = null
+	_title_shader_material = null
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# ROUND 2 - MOUSE STATE TRACKING
+# ══════════════════════════════════════════════════════════════════════════════
+
+func _update_mouse_state(delta: float) -> void:
+	_mouse_velocity = (_mouse_pos - _last_mouse_pos) / delta
+	_mouse_speed = _mouse_velocity.length()
+	_last_mouse_pos = _mouse_pos
+
+	# Update cursor distortion in shader
+	if _background_shader_material:
+		var uv_pos: Vector2 = _mouse_pos / size
+		_background_shader_material.set_shader_parameter("cursor_position", uv_pos)
+
+		# Dynamic distortion based on speed
+		var distortion_strength: float = clampf(_mouse_speed / 500.0, 0.0, 1.0) * 0.05
+		_background_shader_material.set_shader_parameter("distortion_strength", distortion_strength)
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# ROUND 2 - CURSOR TRAIL
+# ══════════════════════════════════════════════════════════════════════════════
+
+func _update_cursor_trail() -> void:
+	if _advanced_particles == null:
+		return
+
+	if _mouse_speed < 100.0:
+		return
+
+	# Emit cursor trail with color based on speed
+	_advanced_particles.emit_cursor_trail(_get_cursor_trail_color())
+
+
+func _get_cursor_trail_color() -> Color:
+	var speed_factor: float = clampf(_mouse_speed / 500.0, 0.0, 1.0)
+
+	# Slow: Blue -> Fast: Orange/Red
+	if speed_factor < 0.3:
+		return Color(0.4, 0.7, 1.0, 0.6)
+	elif speed_factor < 0.6:
+		return Color(0.8, 0.8, 0.3, 0.7)
+	else:
+		return Color(1.0, 0.4, 0.2, 0.8)
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# ROUND 2 - TIME OF DAY COLOR GRADING
+# ══════════════════════════════════════════════════════════════════════════════
+
+func _update_time_of_day() -> void:
+	if _use_system_time:
+		var time: Dictionary = Time.get_time_dict_from_system()
+		_time_of_day_hours = float(time["hour"]) + float(time["minute"]) / 60.0
+
+	_update_shader_time_of_day()
+
+
+func _update_shader_time_of_day() -> void:
+	if _background_shader_material == null:
+		return
+
+	_background_shader_material.set_shader_parameter("time_of_day", _time_of_day_hours)
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# ROUND 2 - INDIVIDUAL BUTTON BREATHING
+# ══════════════════════════════════════════════════════════════════════════════
+
+func _update_button_breathing(delta: float) -> void:
+	if not button_container.visible:
+		return
+
+	var buttons: Array[Button] = [create_button, join_button, settings_button, quit_button]
+	var time: float = Time.get_ticks_msec() * 0.001
+
+	for button in buttons:
+		if button == null or not _button_breath_speeds.has(button):
+			continue
+
+		# Skip if button is being hovered
+		if button.is_hovered():
+			continue
+
+		var speed: float = _button_breath_speeds[button]
+		var phase: float = _button_breath_phases[button]
+
+		# Calculate breathing scale
+		var breath: float = sin(time * speed + phase) * 0.015 + 1.0
+		button.scale = Vector2(breath, breath)
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# ROUND 2 - CONSTELLATION EFFECT
+# ══════════════════════════════════════════════════════════════════════════════
+
+func _start_constellation_effect() -> void:
+	if _advanced_particles == null:
+		return
+
+	# Create anchor points for constellation
+	var anchors: Array[Vector2] = []
+
+	# Place anchors around the screen
+	for i in range(8):
+		var x: float = randf() * size.x
+		var y: float = randf() * size.y
+		anchors.append(Vector2(x, y))
+
+	_advanced_particles.start_constellation(anchors)
+	_constellation_active = true
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# ROUND 2 - SHOCKWAVE & ENERGY EFFECTS
+# ══════════════════════════════════════════════════════════════════════════════
+
+func _emit_button_shockwave(button: Button) -> void:
+	if _advanced_particles == null:
+		return
+
+	var center: Vector2 = button.global_position + button.size / 2.0
+	var radius: float = maxf(button.size.x, button.size.y) * 1.5
+
+	# Determine color based on button type
+	var color: Color = Color(1.0, 0.9, 0.5, 0.8)
+	if button == quit_button:
+		color = Color(1.0, 0.4, 0.4, 0.8)
+	elif button == settings_button:
+		color = Color(0.7, 0.7, 0.9, 0.8)
+	elif button == join_button:
+		color = Color(0.6, 0.4, 1.0, 0.8)
+
+	_advanced_particles.emit_shockwave(center, color, radius)
+
+	# Trigger haptic feedback
+	if _fx_manager:
+		_fx_manager.trigger_haptic(MenuFXManagerClass.HapticPattern.MEDIUM_TAP)
+
+
+func _trigger_energy_pulse(center: Vector2) -> void:
+	if _advanced_particles == null:
+		return
+
+	_advanced_particles.trigger_energy_pulse(center, 300.0)
+	_energy_pulse_active = true
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# ROUND 2 - CHROMATIC ABERRATION ON HOVER
+# ══════════════════════════════════════════════════════════════════════════════
+
+func _apply_chromatic_aberration_to_button(button: Button, intensity: float) -> void:
+	if _chromatic_hover_buttons.has(button):
+		return
+
+	# Apply chromatic aberration shader to button
+	var shader := load("res://ui/shaders/premium_ui_effects.gdshader")
+	if shader == null:
+		return
+
+	var material := ShaderMaterial.new()
+	material.shader = shader
+
+	# Enable only glitch effect with low intensity for chromatic feel
+	material.set_shader_parameter("enable_glitch", true)
+	material.set_shader_parameter("glitch_intensity", intensity)
+	material.set_shader_parameter("glitch_speed", 0.5)
+
+	button.material = material
+	_chromatic_hover_buttons[button] = material
+
+
+func _remove_chromatic_aberration_from_button(button: Button) -> void:
+	if not _chromatic_hover_buttons.has(button):
+		return
+
+	button.material = null
+	_chromatic_hover_buttons.erase(button)
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# ROUND 2 - SMART ADAPTATION
+# ══════════════════════════════════════════════════════════════════════════════
+
+func _track_button_use(button_name: String) -> void:
+	_button_use_counts[button_name] = _button_use_counts.get(button_name, 0) + 1
+
+	# Apply growth to frequently used buttons
+	if _button_use_counts[button_name] >= 3:
+		_apply_button_growth(button_name)
+
+
+func _apply_button_growth(button_name: String) -> void:
+	var button: Button = null
+	match button_name:
+		"create":
+			button = create_button
+		"join":
+			button = join_button
+		"settings":
+			button = settings_button
+
+	if button == null:
+		return
+
+	# Subtle permanent scale increase
+	var growth_factor: float = 1.0 + (_button_use_counts[button_name] - 2) * 0.01
+	growth_factor = clampf(growth_factor, 1.0, 1.1)
+
+	button.custom_minimum_size *= growth_factor
+
+
+func _track_animation_seen(animation_name: String) -> void:
+	_animation_seen_counts[animation_name] = _animation_seen_counts.get(animation_name, 0) + 1
+
+
+func _get_animation_speed_multiplier(animation_name: String) -> float:
+	var seen_count: int = _animation_seen_counts.get(animation_name, 0)
+
+	if seen_count >= 2:
+		# Speed up by 15% per viewing after first, max 2x
+		return minf(1.0 + (seen_count - 1) * 0.15, 2.0)
+
+	return 1.0
+
+
+# ══════════════════════════════════════════════════════════════════════════════
 # ULTRA-PREMIUM BUTTON EFFECTS
 # ══════════════════════════════════════════════════════════════════════════════
 
@@ -392,9 +760,20 @@ func _on_button_hover_enter(button: Button) -> void:
 	if _particles:
 		_particles.start_button_hover_trail(button)
 
+	# Round 2: Apply chromatic aberration on hover
+	_apply_chromatic_aberration_to_button(button, CHROMATIC_HOVER_INTENSITY)
+
+	# Round 2: Start reactive particles near button
+	if _advanced_particles:
+		_advanced_particles.start_section("buttons", Rect2(button.global_position, button.size))
+
 	# Play hover sound
 	if is_instance_valid(AudioManager):
 		AudioManager.play_sfx("button_hover")
+
+	# Round 2: Haptic feedback
+	if _fx_manager:
+		_fx_manager.trigger_haptic(MenuFXManagerClass.HapticPattern.LIGHT_TAP)
 
 
 func _on_button_hover_exit(button: Button) -> void:
@@ -417,6 +796,13 @@ func _on_button_hover_exit(button: Button) -> void:
 	if _particles:
 		_particles.stop_button_hover_trail(button)
 
+	# Round 2: Remove chromatic aberration
+	_remove_chromatic_aberration_from_button(button)
+
+	# Round 2: Stop reactive particles
+	if _advanced_particles:
+		_advanced_particles.stop_section("buttons")
+
 
 func _on_button_press_down(button: Button) -> void:
 	var tween: Tween = create_tween()
@@ -434,9 +820,20 @@ func _on_button_press_down(button: Button) -> void:
 	if _particles:
 		_particles.emit_button_click(button)
 
+	# Round 2: Emit shockwave ripple
+	_emit_button_shockwave(button)
+
+	# Round 2: Trigger energy pulse at button center
+	var center: Vector2 = button.global_position + button.size / 2.0
+	_trigger_energy_pulse(center)
+
 	# Play click sound
 	if is_instance_valid(AudioManager):
 		AudioManager.play_sfx("button_click")
+
+	# Round 2: Heavy haptic feedback
+	if _fx_manager:
+		_fx_manager.trigger_haptic(MenuFXManagerClass.HapticPattern.HEAVY_TAP)
 
 
 func _on_button_press_up(button: Button) -> void:
@@ -765,45 +1162,60 @@ func _animate_version_fade() -> void:
 func _show_panel(panel: PanelContainer) -> void:
 	_active_panel = panel
 
-	# Animate button container out
+	# Round 2: Track animation for smart speedup
+	_track_animation_seen("panel_transition")
+	var speed_mult: float = _get_animation_speed_multiplier("panel_transition")
+
+	# Animate button container out with liquid morph feel
 	var exit_tween: Tween = create_tween()
 	exit_tween.set_parallel(true)
-	exit_tween.tween_property(button_container, "modulate:a", 0.0, 0.2)
-	exit_tween.tween_property(button_container, "scale", Vector2(0.95, 0.95), 0.2)\
-		.set_trans(Tween.TRANS_CUBIC)\
+	exit_tween.tween_property(button_container, "modulate:a", 0.0, 0.2 / speed_mult)
+	exit_tween.tween_property(button_container, "scale", Vector2(0.8, 1.1), 0.15 / speed_mult)\
+		.set_trans(Tween.TRANS_BACK)\
 		.set_ease(Tween.EASE_IN)
+	exit_tween.chain()
+	exit_tween.tween_property(button_container, "scale", Vector2(0.95, 0.95), 0.1 / speed_mult)
 
 	await exit_tween.finished
 	button_container.visible = false
 
-	# Show panel with 3D rotation effect
+	# Show panel with origami-style fold effect
 	_hide_all_panels()
 	panel.visible = true
 	panel.pivot_offset = panel.size / 2.0
 
-	# Initial state
+	# Round 2: Origami-style initial state
 	panel.modulate.a = 0.0
-	panel.scale = Vector2(0.85, 0.85)
-	panel.rotation = deg_to_rad(-5)
+	panel.scale = Vector2(0.0, 1.0)
+	panel.rotation = deg_to_rad(90)
 
-	# Animate in with elastic
+	# Animate in with origami unfold
 	var enter_tween: Tween = create_tween()
 	enter_tween.set_parallel(true)
 
-	enter_tween.tween_property(panel, "modulate:a", 1.0, PANEL_TRANSITION_DURATION * 0.7)\
+	enter_tween.tween_property(panel, "modulate:a", 1.0, (PANEL_TRANSITION_DURATION * 0.5) / speed_mult)\
 		.set_trans(Tween.TRANS_CUBIC)\
 		.set_ease(Tween.EASE_OUT)
 
-	enter_tween.tween_property(panel, "scale", Vector2.ONE, PANEL_TRANSITION_DURATION)\
+	enter_tween.tween_property(panel, "scale:x", 1.0, PANEL_TRANSITION_DURATION / speed_mult)\
 		.set_trans(Tween.TRANS_BACK)\
 		.set_ease(Tween.EASE_OUT)
 
-	enter_tween.tween_property(panel, "rotation", 0.0, PANEL_TRANSITION_DURATION)\
+	enter_tween.tween_property(panel, "rotation", 0.0, (PANEL_TRANSITION_DURATION * 0.8) / speed_mult)\
 		.set_trans(Tween.TRANS_ELASTIC)\
 		.set_ease(Tween.EASE_OUT)
 
 	# Add panel edge glow
 	_add_panel_glow(panel)
+
+	# Round 2: Emit particles during transition
+	if _advanced_particles:
+		var center: Vector2 = panel.global_position + panel.size / 2.0
+		_advanced_particles.emit_vortex(center, Rect2(Vector2.ZERO, size), Color(0.5, 0.8, 1.0, 0.5), 15)
+
+	# Round 2: Haptic feedback
+	if _fx_manager:
+		_fx_manager.trigger_haptic(MenuFXManagerClass.HapticPattern.SUCCESS)
 
 
 func _hide_current_panel() -> void:

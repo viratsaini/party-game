@@ -762,3 +762,344 @@ static func remove_pulse_effect(control: Control) -> void:
 	tween.tween_property(control, "modulate", Color.WHITE, TIMING_FAST)
 
 # endregion
+
+
+# =============================================================================
+# region - Skeleton Loading
+# =============================================================================
+
+## Create skeleton loading placeholder
+static func create_skeleton_loader(parent: Control, match_layout: bool = true) -> Control:
+	var skeleton := ColorRect.new()
+	skeleton.name = "SkeletonLoader"
+	skeleton.set_anchors_preset(Control.PRESET_FULL_RECT)
+	skeleton.color = Color(0.2, 0.2, 0.25)
+	skeleton.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	# Create shimmer effect
+	skeleton.ready.connect(func():
+		_add_shimmer_animation(skeleton)
+	)
+
+	parent.add_child(skeleton)
+	return skeleton
+
+
+static func _add_shimmer_animation(skeleton: ColorRect) -> void:
+	var tween := skeleton.create_tween()
+	tween.set_loops()
+	tween.tween_property(skeleton, "modulate", Color(1.3, 1.3, 1.3), 0.8)\
+		.set_trans(Tween.TRANS_SINE)\
+		.set_ease(Tween.EASE_IN_OUT)
+	tween.tween_property(skeleton, "modulate", Color.WHITE, 0.8)\
+		.set_trans(Tween.TRANS_SINE)\
+		.set_ease(Tween.EASE_IN_OUT)
+
+
+## Remove skeleton with fade
+static func remove_skeleton_loader(parent: Control) -> void:
+	var skeleton := parent.get_node_or_null("SkeletonLoader")
+	if skeleton:
+		var tween := skeleton.create_tween()
+		tween.tween_property(skeleton, "modulate:a", 0.0, TIMING_FAST)
+		tween.tween_callback(skeleton.queue_free)
+
+# endregion
+
+
+# =============================================================================
+# region - Stagger Animations
+# =============================================================================
+
+## Animate children with staggered delay
+static func animate_stagger(
+	children: Array,
+	animation_type: String = "fade_up",
+	stagger_delay: float = 0.05
+) -> Array[Tween]:
+	var tweens: Array[Tween] = []
+
+	for i: int in range(children.size()):
+		var child: Node = children[i]
+		if not is_instance_valid(child) or not child is Control:
+			continue
+
+		var control: Control = child as Control
+		var delay: float = i * stagger_delay
+		var tween := control.create_tween()
+
+		match animation_type:
+			"fade_up":
+				control.modulate.a = 0.0
+				control.position.y += 20
+				var target_pos := control.position - Vector2(0, 20)
+
+				tween.set_parallel(true)
+				tween.tween_property(control, "modulate:a", 1.0, TIMING_FAST).set_delay(delay)
+				tween.tween_property(control, "position", target_pos, TIMING_NORMAL).set_delay(delay)\
+					.set_trans(Tween.TRANS_CUBIC)\
+					.set_ease(Tween.EASE_OUT)
+
+			"scale":
+				control.scale = Vector2.ZERO
+				control.pivot_offset = control.size / 2
+
+				tween.tween_property(control, "scale", Vector2.ONE, TIMING_NORMAL).set_delay(delay)\
+					.set_trans(Tween.TRANS_BACK)\
+					.set_ease(Tween.EASE_OUT)
+
+			"fade":
+				control.modulate.a = 0.0
+				tween.tween_property(control, "modulate:a", 1.0, TIMING_FAST).set_delay(delay)
+
+			"slide_right":
+				control.modulate.a = 0.0
+				control.position.x -= 30
+				var target_pos := control.position + Vector2(30, 0)
+
+				tween.set_parallel(true)
+				tween.tween_property(control, "modulate:a", 1.0, TIMING_FAST).set_delay(delay)
+				tween.tween_property(control, "position", target_pos, TIMING_NORMAL).set_delay(delay)\
+					.set_trans(Tween.TRANS_CUBIC)\
+					.set_ease(Tween.EASE_OUT)
+
+		tweens.append(tween)
+
+	return tweens
+
+# endregion
+
+
+# =============================================================================
+# region - Network/Offline States
+# =============================================================================
+
+## Show offline indicator
+static func show_offline_indicator(parent: Control) -> Control:
+	var indicator := PanelContainer.new()
+	indicator.name = "OfflineIndicator"
+	indicator.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+	indicator.anchor_top = 0.95
+	indicator.modulate.a = 0.0
+
+	var style := StyleBoxFlat.new()
+	style.bg_color = COLOR_WARNING
+	style.corner_radius_top_left = 8
+	style.corner_radius_top_right = 8
+	indicator.add_theme_stylebox_override("panel", style)
+
+	var hbox := HBoxContainer.new()
+	hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	hbox.add_theme_constant_override("separation", 8)
+	indicator.add_child(hbox)
+
+	var icon := Label.new()
+	icon.text = "!"
+	icon.add_theme_font_size_override("font_size", 20)
+	hbox.add_child(icon)
+
+	var label := Label.new()
+	label.text = "You are offline"
+	label.add_theme_font_size_override("font_size", 14)
+	hbox.add_child(label)
+
+	parent.add_child(indicator)
+
+	# Slide in animation
+	var tween := indicator.create_tween()
+	tween.tween_property(indicator, "modulate:a", 1.0, TIMING_NORMAL)
+
+	return indicator
+
+
+## Hide offline indicator
+static func hide_offline_indicator(parent: Control) -> void:
+	var indicator := parent.get_node_or_null("OfflineIndicator")
+	if indicator:
+		var tween := indicator.create_tween()
+		tween.tween_property(indicator, "modulate:a", 0.0, TIMING_FAST)
+		tween.tween_callback(indicator.queue_free)
+
+# endregion
+
+
+# =============================================================================
+# region - Empty States
+# =============================================================================
+
+## Create empty state with guidance
+static func create_empty_state(
+	parent: Control,
+	title: String,
+	description: String,
+	action_text: String = "",
+	action_callback: Callable = Callable()
+) -> Control:
+	var empty := VBoxContainer.new()
+	empty.name = "EmptyState"
+	empty.alignment = BoxContainer.ALIGNMENT_CENTER
+	empty.set_anchors_preset(Control.PRESET_CENTER)
+	empty.add_theme_constant_override("separation", 16)
+	empty.modulate.a = 0.0
+
+	# Icon placeholder
+	var icon := Label.new()
+	icon.text = "?"
+	icon.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	icon.add_theme_font_size_override("font_size", 64)
+	icon.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
+	empty.add_child(icon)
+
+	# Title
+	var title_label := Label.new()
+	title_label.text = title
+	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title_label.add_theme_font_size_override("font_size", 24)
+	empty.add_child(title_label)
+
+	# Description
+	var desc_label := Label.new()
+	desc_label.text = description
+	desc_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	desc_label.add_theme_font_size_override("font_size", 14)
+	desc_label.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
+	desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	desc_label.custom_minimum_size.x = 300
+	empty.add_child(desc_label)
+
+	# Action button
+	if not action_text.is_empty() and action_callback.is_valid():
+		var btn := Button.new()
+		btn.text = action_text
+		btn.custom_minimum_size = Vector2(150, 44)
+		btn.pressed.connect(action_callback)
+		empty.add_child(btn)
+		apply_button_polish(btn)
+
+	parent.add_child(empty)
+
+	# Fade in
+	var tween := empty.create_tween()
+	tween.tween_property(empty, "modulate:a", 1.0, TIMING_NORMAL)
+
+	return empty
+
+
+## Remove empty state
+static func remove_empty_state(parent: Control) -> void:
+	var empty := parent.get_node_or_null("EmptyState")
+	if empty:
+		var tween := empty.create_tween()
+		tween.tween_property(empty, "modulate:a", 0.0, TIMING_FAST)
+		tween.tween_callback(empty.queue_free)
+
+# endregion
+
+
+# =============================================================================
+# region - Accessibility Utilities
+# =============================================================================
+
+## Check contrast ratio meets WCAG AAA
+static func check_contrast_aaa(foreground: Color, background: Color) -> bool:
+	var ratio := _calculate_contrast_ratio(foreground, background)
+	return ratio >= 7.0
+
+
+## Calculate contrast ratio between two colors
+static func _calculate_contrast_ratio(fg: Color, bg: Color) -> float:
+	var fg_lum := _get_relative_luminance(fg)
+	var bg_lum := _get_relative_luminance(bg)
+	var lighter := maxf(fg_lum, bg_lum)
+	var darker := minf(fg_lum, bg_lum)
+	return (lighter + 0.05) / (darker + 0.05)
+
+
+static func _get_relative_luminance(color: Color) -> float:
+	var r := color.r
+	var g := color.g
+	var b := color.b
+	r = r / 12.92 if r <= 0.03928 else pow((r + 0.055) / 1.055, 2.4)
+	g = g / 12.92 if g <= 0.03928 else pow((g + 0.055) / 1.055, 2.4)
+	b = b / 12.92 if b <= 0.03928 else pow((b + 0.055) / 1.055, 2.4)
+	return 0.2126 * r + 0.7152 * g + 0.0722 * b
+
+
+## Set accessibility label for screen readers
+static func set_accessibility_label(control: Control, label: String) -> void:
+	control.set_meta("accessibility_label", label)
+
+
+## Get accessibility label
+static func get_accessibility_label(control: Control) -> String:
+	return control.get_meta("accessibility_label", control.name)
+
+
+## Validate all interactive elements meet accessibility requirements
+static func validate_accessibility(root: Node) -> Array[Dictionary]:
+	var issues: Array[Dictionary] = []
+
+	_validate_accessibility_recursive(root, issues)
+
+	return issues
+
+
+static func _validate_accessibility_recursive(node: Node, issues: Array[Dictionary]) -> void:
+	if node is Control:
+		var control: Control = node as Control
+
+		# Check touch target size
+		if control is BaseButton:
+			if control.size.x < TOUCH_TARGET_MIN or control.size.y < TOUCH_TARGET_MIN:
+				issues.append({
+					"type": "touch_target",
+					"node": control.name,
+					"message": "Touch target too small: %dx%d (minimum 44x44)" % [int(control.size.x), int(control.size.y)]
+				})
+
+		# Check focus mode
+		if control is BaseButton and control.focus_mode == Control.FOCUS_NONE:
+			issues.append({
+				"type": "focus",
+				"node": control.name,
+				"message": "Button cannot receive keyboard focus"
+			})
+
+	for child: Node in node.get_children():
+		_validate_accessibility_recursive(child, issues)
+
+# endregion
+
+
+# =============================================================================
+# region - Performance Helpers
+# =============================================================================
+
+## Check if reduce motion preference is enabled
+static func should_reduce_motion() -> bool:
+	var root := Engine.get_main_loop()
+	if root is SceneTree:
+		var access_mgr := root.root.get_node_or_null("AccessibilityManager")
+		if access_mgr and access_mgr.get("reduce_motion"):
+			return true
+	return false
+
+
+## Get animation duration respecting accessibility
+static func get_accessible_duration(base_duration: float) -> float:
+	if should_reduce_motion():
+		return 0.0
+	return base_duration
+
+
+## Create optimized tween (checks performance mode)
+static func create_optimized_tween(node: Node) -> Tween:
+	var tween := node.create_tween()
+
+	# If reduce motion, make animations instant
+	if should_reduce_motion():
+		tween.set_speed_scale(1000.0)
+
+	return tween
+
+# endregion
