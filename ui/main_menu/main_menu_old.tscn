@@ -1,0 +1,283 @@
+[gd_scene load_steps=2 format=3 uid="uid://c1mainmenu00001"]
+
+[ext_resource type="Script" path="res://ui/main_menu/main_menu.gd" id="1_script"]
+
+[node name="MainMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.08, 0.08, 0.14, 1)
+
+[node name="TitleContainer" type="VBoxContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -250.0
+offset_top = 80.0
+offset_right = 250.0
+offset_bottom = 280.0
+grow_horizontal = 2
+alignment = 1
+
+[node name="Title" type="Label" parent="TitleContainer"]
+layout_mode = 2
+text = "BATTLEZONE"
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_font_sizes/font_size = 72
+
+[node name="Subtitle" type="Label" parent="TitleContainer"]
+layout_mode = 2
+text = "PARTY"
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_font_sizes/font_size = 42
+theme_override_colors/font_color = Color(0.9, 0.7, 0.2, 1)
+
+[node name="ButtonContainer" type="VBoxContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -180.0
+offset_top = -140.0
+offset_right = 180.0
+offset_bottom = 140.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 16
+
+[node name="CreateButton" type="Button" parent="ButtonContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 65)
+text = "CREATE ROOM"
+theme_override_font_sizes/font_size = 28
+
+[node name="JoinButton" type="Button" parent="ButtonContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 65)
+text = "JOIN ROOM"
+theme_override_font_sizes/font_size = 28
+
+[node name="SettingsButton" type="Button" parent="ButtonContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 65)
+text = "SETTINGS"
+theme_override_font_sizes/font_size = 28
+
+[node name="QuitButton" type="Button" parent="ButtonContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 65)
+text = "QUIT"
+theme_override_font_sizes/font_size = 28
+
+[node name="JoinPanel" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -240.0
+offset_top = -220.0
+offset_right = 240.0
+offset_bottom = 220.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="JoinPanel"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="JoinTitle" type="Label" parent="JoinPanel/VBox"]
+layout_mode = 2
+text = "Join Game"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 32
+
+[node name="IPInput" type="LineEdit" parent="JoinPanel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 50)
+placeholder_text = "Enter IP address"
+theme_override_font_sizes/font_size = 24
+
+[node name="ConnectButton" type="Button" parent="JoinPanel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 60)
+text = "CONNECT"
+theme_override_font_sizes/font_size = 26
+
+[node name="OrLabel" type="Label" parent="JoinPanel/VBox"]
+layout_mode = 2
+text = "— Discovered Games —"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+
+[node name="DiscoveredGames" type="ItemList" parent="JoinPanel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 120)
+theme_override_font_sizes/font_size = 24
+
+[node name="BackButton" type="Button" parent="JoinPanel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 60)
+text = "BACK"
+theme_override_font_sizes/font_size = 26
+
+[node name="SettingsPanel" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -260.0
+offset_top = -240.0
+offset_right = 260.0
+offset_bottom = 240.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="SettingsPanel"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="SettingsTitle" type="Label" parent="SettingsPanel/VBox"]
+layout_mode = 2
+text = "Settings"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 32
+
+[node name="NameRow" type="HBoxContainer" parent="SettingsPanel/VBox"]
+layout_mode = 2
+
+[node name="NameLabel" type="Label" parent="SettingsPanel/VBox/NameRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(120, 0)
+text = "Name:"
+vertical_alignment = 1
+theme_override_font_sizes/font_size = 26
+
+[node name="NameInput" type="LineEdit" parent="SettingsPanel/VBox/NameRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 50)
+placeholder_text = "Enter name"
+theme_override_font_sizes/font_size = 24
+
+[node name="MasterRow" type="HBoxContainer" parent="SettingsPanel/VBox"]
+layout_mode = 2
+
+[node name="MasterLabel" type="Label" parent="SettingsPanel/VBox/MasterRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(120, 0)
+text = "Master"
+vertical_alignment = 1
+theme_override_font_sizes/font_size = 26
+
+[node name="MasterSlider" type="HSlider" parent="SettingsPanel/VBox/MasterRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 40)
+min_value = 0.0
+max_value = 1.0
+step = 0.05
+value = 1.0
+
+[node name="MusicRow" type="HBoxContainer" parent="SettingsPanel/VBox"]
+layout_mode = 2
+
+[node name="MusicLabel" type="Label" parent="SettingsPanel/VBox/MusicRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(120, 0)
+text = "Music"
+vertical_alignment = 1
+theme_override_font_sizes/font_size = 26
+
+[node name="MusicSlider" type="HSlider" parent="SettingsPanel/VBox/MusicRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 40)
+min_value = 0.0
+max_value = 1.0
+step = 0.05
+value = 0.8
+
+[node name="SFXRow" type="HBoxContainer" parent="SettingsPanel/VBox"]
+layout_mode = 2
+
+[node name="SFXLabel" type="Label" parent="SettingsPanel/VBox/SFXRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(120, 0)
+text = "SFX"
+vertical_alignment = 1
+theme_override_font_sizes/font_size = 26
+
+[node name="SFXSlider" type="HSlider" parent="SettingsPanel/VBox/SFXRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 40)
+min_value = 0.0
+max_value = 1.0
+step = 0.05
+value = 1.0
+
+[node name="SettingsBackButton" type="Button" parent="SettingsPanel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 60)
+text = "BACK"
+theme_override_font_sizes/font_size = 26
+
+[node name="VersionLabel" type="Label" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -80.0
+offset_top = -40.0
+offset_right = 80.0
+grow_horizontal = 2
+grow_vertical = 0
+text = "v0.1.0"
+horizontal_alignment = 1
+vertical_alignment = 2
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.5, 0.5, 0.5, 1)
