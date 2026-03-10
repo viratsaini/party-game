@@ -1,6 +1,7 @@
-## Main menu screen for BattleZone Party - ULTRA PREMIUM EDITION.
-## Features AAA-quality animations, particle effects, dynamic glow,
-## advanced transitions, and responsive micro-interactions.
+## Main menu screen for BattleZone Party - ROUND 2 ULTRA PREMIUM EDITION.
+## Features AAA-quality animations, advanced shaders, particle physics,
+## dynamic glow, holographic effects, smart adaptation, and responsive
+## micro-interactions with haptic feedback synchronization.
 extends Control
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -9,6 +10,8 @@ extends Control
 
 const UIParticlesClass = preload("res://ui/effects/ui_particles.gd")
 const UIGlowEffectClass = preload("res://ui/effects/glow_effect.gd")
+const AdvancedParticlesV2Class = preload("res://ui/effects/advanced_particles_v2.gd")
+const MenuFXManagerClass = preload("res://ui/effects/menu_fx_manager.gd")
 
 
 # ══════════════════════════════════════════════════════════════════════════════

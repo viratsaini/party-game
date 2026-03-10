@@ -845,3 +845,598 @@ static func get_input_style(size: String = "md") -> Dictionary:
 	}
 
 # endregion
+
+
+# =============================================================================
+# region - Micro-Interaction System
+# =============================================================================
+
+## Complete button interaction system with press -> release -> settle
+static func apply_button_microinteractions(button: BaseButton) -> void:
+	if not is_instance_valid(button):
+		return
+
+	# Store original values
+	button.set_meta("_original_scale", button.scale)
+	button.pivot_offset = button.size / 2
+
+	# Disconnect existing signals to avoid duplicates
+	_disconnect_if_connected(button, "mouse_entered")
+	_disconnect_if_connected(button, "mouse_exited")
+	_disconnect_if_connected(button, "button_down")
+	_disconnect_if_connected(button, "button_up")
+	_disconnect_if_connected(button, "focus_entered")
+	_disconnect_if_connected(button, "focus_exited")
+
+	# Connect hover states
+	button.mouse_entered.connect(_on_button_hover_enter.bind(button))
+	button.mouse_exited.connect(_on_button_hover_exit.bind(button))
+
+	# Connect press states with sequence
+	button.button_down.connect(_on_button_press_start.bind(button))
+	button.button_up.connect(_on_button_press_release.bind(button))
+
+	# Connect focus states for accessibility
+	button.focus_entered.connect(_on_button_focus_enter.bind(button))
+	button.focus_exited.connect(_on_button_focus_exit.bind(button))
+
+
+static func _disconnect_if_connected(button: BaseButton, signal_name: String) -> void:
+	var sig: Signal = button.get(signal_name)
+	for connection: Dictionary in sig.get_connections():
+		sig.disconnect(connection["callable"])
+
+
+static func _on_button_hover_enter(button: BaseButton) -> void:
+	if button.disabled:
+		return
+
+	button.set_meta("_is_hovered", true)
+	var tween := button.create_tween()
+	tween.tween_property(button, "scale", Vector2(1.05, 1.05), 0.1)\
+		.set_trans(Tween.TRANS_BACK)\
+		.set_ease(Tween.EASE_OUT)
+
+	_play_ui_sound("hover")
+
+
+static func _on_button_hover_exit(button: BaseButton) -> void:
+	button.set_meta("_is_hovered", false)
+	if button.get_meta("_is_pressed", false):
+		return
+
+	var original_scale: Vector2 = button.get_meta("_original_scale", Vector2.ONE)
+	var tween := button.create_tween()
+	tween.tween_property(button, "scale", original_scale, 0.15)\
+		.set_trans(Tween.TRANS_CUBIC)\
+		.set_ease(Tween.EASE_OUT)
+
+
+static func _on_button_press_start(button: BaseButton) -> void:
+	if button.disabled:
+		return
+
+	button.set_meta("_is_pressed", true)
+
+	# Press animation - quick squish
+	var tween := button.create_tween()
+	tween.tween_property(button, "scale", Vector2(0.95, 0.95), 0.05)\
+		.set_trans(Tween.TRANS_QUAD)\
+		.set_ease(Tween.EASE_OUT)
+
+	_play_ui_sound("click")
+
+
+static func _on_button_press_release(button: BaseButton) -> void:
+	button.set_meta("_is_pressed", false)
+
+	var is_hovered: bool = button.get_meta("_is_hovered", false)
+	var target_scale := Vector2(1.05, 1.05) if is_hovered else Vector2.ONE
+	var original_scale: Vector2 = button.get_meta("_original_scale", Vector2.ONE)
+
+	# Release animation - bounce back with overshoot then settle
+	var tween := button.create_tween()
+	tween.set_parallel(false)
+
+	# Overshoot
+	tween.tween_property(button, "scale", target_scale * 1.08, 0.15)\
+		.set_trans(Tween.TRANS_BACK)\
+		.set_ease(Tween.EASE_OUT)
+
+	# Settle
+	tween.tween_property(button, "scale", target_scale if is_hovered else original_scale, 0.2)\
+		.set_trans(Tween.TRANS_CUBIC)\
+		.set_ease(Tween.EASE_OUT)
+
+
+static func _on_button_focus_enter(button: BaseButton) -> void:
+	# Add focus glow
+	var tween := button.create_tween()
+	tween.tween_property(button, "modulate", Color(1.1, 1.1, 1.2), 0.1)
+
+
+static func _on_button_focus_exit(button: BaseButton) -> void:
+	var tween := button.create_tween()
+	tween.tween_property(button, "modulate", Color.WHITE, 0.1)
+
+
+## Play UI sound with fallback
+static func _play_ui_sound(sound_name: String) -> void:
+	var root := Engine.get_main_loop()
+	if root is SceneTree:
+		var manager := root.root.get_node_or_null("AudioManager")
+		if manager and manager.has_method("play_sfx"):
+			manager.play_sfx("ui_" + sound_name)
+
+# endregion
+
+
+# =============================================================================
+# region - Panel Polish System
+# =============================================================================
+
+## Complete panel entrance/exit animation system
+static func apply_panel_polish(panel: Control, entrance_direction: Vector2 = Vector2.DOWN) -> void:
+	if not is_instance_valid(panel):
+		return
+
+	panel.set_meta("_original_position", panel.position)
+	panel.set_meta("_entrance_direction", entrance_direction)
+	panel.set_meta("_is_animated", true)
+
+	if not panel.visibility_changed.is_connected(_on_panel_visibility_changed.bind(panel)):
+		panel.visibility_changed.connect(_on_panel_visibility_changed.bind(panel))
+
+
+static func _on_panel_visibility_changed(panel: Control) -> void:
+	if panel.visible and panel.get_meta("_is_animated", true):
+		animate_panel_entrance(panel)
+
+
+## Animate panel entrance with scale, fade, and slide
+static func animate_panel_entrance(panel: Control, direction: Vector2 = Vector2.ZERO) -> Tween:
+	if not is_instance_valid(panel):
+		return null
+
+	var entrance_dir: Vector2 = direction if direction != Vector2.ZERO else panel.get_meta("_entrance_direction", Vector2.DOWN)
+	var original_pos: Vector2 = panel.get_meta("_original_position", panel.position)
+
+	# Set initial state
+	panel.position = original_pos + entrance_dir * 50
+	panel.scale = Vector2(0.9, 0.9)
+	panel.modulate.a = 0.0
+	panel.pivot_offset = panel.size / 2
+
+	var tween := panel.create_tween()
+	tween.set_parallel(true)
+
+	# Position animation
+	tween.tween_property(panel, "position", original_pos, 0.32)\
+		.set_trans(Tween.TRANS_CUBIC)\
+		.set_ease(Tween.EASE_OUT)
+
+	# Scale animation with back easing for overshoot
+	tween.tween_property(panel, "scale", Vector2.ONE, 0.32)\
+		.set_trans(Tween.TRANS_BACK)\
+		.set_ease(Tween.EASE_OUT)
+
+	# Fade animation
+	tween.tween_property(panel, "modulate:a", 1.0, 0.2)\
+		.set_trans(Tween.TRANS_CUBIC)\
+		.set_ease(Tween.EASE_OUT)
+
+	_play_ui_sound("panel_open")
+
+	return tween
+
+
+## Animate panel exit
+static func animate_panel_exit(panel: Control, direction: Vector2 = Vector2.ZERO, hide_after: bool = true) -> Tween:
+	if not is_instance_valid(panel):
+		return null
+
+	var exit_dir: Vector2 = direction if direction != Vector2.ZERO else panel.get_meta("_entrance_direction", Vector2.DOWN)
+	var target_pos: Vector2 = panel.position + exit_dir * 50
+
+	panel.pivot_offset = panel.size / 2
+
+	var tween := panel.create_tween()
+	tween.set_parallel(true)
+
+	tween.tween_property(panel, "position", target_pos, 0.25)\
+		.set_trans(Tween.TRANS_CUBIC)\
+		.set_ease(Tween.EASE_IN)
+
+	tween.tween_property(panel, "scale", Vector2(0.9, 0.9), 0.25)\
+		.set_trans(Tween.TRANS_CUBIC)\
+		.set_ease(Tween.EASE_IN)
+
+	tween.tween_property(panel, "modulate:a", 0.0, 0.15)
+
+	if hide_after:
+		tween.chain().tween_callback(func(): panel.visible = false)
+
+	_play_ui_sound("panel_close")
+
+	return tween
+
+# endregion
+
+
+# =============================================================================
+# region - Stagger Animation System
+# =============================================================================
+
+## Animate a group of elements with staggered timing
+static func animate_stagger_entrance(
+	elements: Array,
+	base_delay: float = 0.05,
+	animation_type: String = "fade_slide"
+) -> Array[Tween]:
+	var tweens: Array[Tween] = []
+
+	for i: int in range(elements.size()):
+		var element: Node = elements[i]
+		if not is_instance_valid(element) or not element is Control:
+			continue
+
+		var control: Control = element as Control
+		var delay: float = i * base_delay
+
+		var tween := control.create_tween()
+		tween.set_parallel(true)
+
+		match animation_type:
+			"fade_slide":
+				control.modulate.a = 0.0
+				control.position.y += 20
+				var target_pos := control.position - Vector2(0, 20)
+
+				tween.tween_property(control, "modulate:a", 1.0, 0.2).set_delay(delay)
+				tween.tween_property(control, "position", target_pos, 0.3).set_delay(delay)\
+					.set_trans(Tween.TRANS_CUBIC)\
+					.set_ease(Tween.EASE_OUT)
+
+			"scale":
+				control.scale = Vector2.ZERO
+				control.pivot_offset = control.size / 2
+
+				tween.tween_property(control, "scale", Vector2.ONE, 0.3).set_delay(delay)\
+					.set_trans(Tween.TRANS_BACK)\
+					.set_ease(Tween.EASE_OUT)
+
+			"fade":
+				control.modulate.a = 0.0
+				tween.tween_property(control, "modulate:a", 1.0, 0.2).set_delay(delay)
+
+		tweens.append(tween)
+
+	return tweens
+
+# endregion
+
+
+# =============================================================================
+# region - Loading & Progress States
+# =============================================================================
+
+## Create a skeleton loading state
+static func create_skeleton_loader(target: Control) -> Control:
+	var skeleton := ColorRect.new()
+	skeleton.name = "SkeletonLoader"
+	skeleton.set_anchors_preset(Control.PRESET_FULL_RECT)
+	skeleton.color = Color(0.2, 0.2, 0.25)
+
+	# Create shimmer animation
+	var tween := skeleton.create_tween()
+	tween.set_loops()
+	tween.tween_property(skeleton, "modulate", Color(1.2, 1.2, 1.2), 0.8)
+	tween.tween_property(skeleton, "modulate", Color.WHITE, 0.8)
+
+	target.add_child(skeleton)
+	return skeleton
+
+
+## Remove skeleton loader with fade
+static func remove_skeleton_loader(target: Control) -> void:
+	var skeleton := target.get_node_or_null("SkeletonLoader")
+	if skeleton:
+		var tween := skeleton.create_tween()
+		tween.tween_property(skeleton, "modulate:a", 0.0, 0.2)
+		tween.tween_callback(skeleton.queue_free)
+
+
+## Create loading spinner
+static func create_loading_spinner(parent: Control, size: float = 48.0) -> Control:
+	var spinner := Control.new()
+	spinner.name = "LoadingSpinner"
+	spinner.custom_minimum_size = Vector2(size, size)
+
+	# Create spinner segments
+	var segment_count: int = 8
+	for i: int in range(segment_count):
+		var segment := ColorRect.new()
+		segment.size = Vector2(4, size * 0.3)
+		segment.position = Vector2(size / 2 - 2, 0)
+		segment.pivot_offset = Vector2(2, size / 2)
+		segment.rotation = (TAU / segment_count) * i
+		segment.modulate.a = 1.0 - (float(i) / segment_count) * 0.7
+		segment.color = get_color("primary.500")
+		spinner.add_child(segment)
+
+	# Rotate spinner
+	spinner.ready.connect(func():
+		var tween := spinner.create_tween()
+		tween.set_loops()
+		tween.tween_property(spinner, "rotation", TAU, 1.0).from(0.0)\
+			.set_trans(Tween.TRANS_LINEAR)
+	)
+
+	parent.add_child(spinner)
+	return spinner
+
+# endregion
+
+
+# =============================================================================
+# region - Feedback States (Success, Error, Warning)
+# =============================================================================
+
+## Show success celebration
+static func show_success_celebration(
+	container: Control,
+	message: String = "Success!",
+	duration: float = 2.0
+) -> Control:
+	var overlay := ColorRect.new()
+	overlay.name = "SuccessCelebration"
+	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	overlay.color = Color(0.2, 0.8, 0.3, 0.1)
+	overlay.modulate.a = 0.0
+
+	var center := VBoxContainer.new()
+	center.alignment = BoxContainer.ALIGNMENT_CENTER
+	center.set_anchors_preset(Control.PRESET_CENTER)
+	overlay.add_child(center)
+
+	var icon := Label.new()
+	icon.text = "OK"
+	icon.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	icon.add_theme_font_size_override("font_size", 48)
+	icon.add_theme_color_override("font_color", get_color("success.500"))
+	icon.scale = Vector2.ZERO
+	icon.pivot_offset = Vector2(24, 24)
+	center.add_child(icon)
+
+	var label := Label.new()
+	label.text = message
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.add_theme_font_size_override("font_size", 24)
+	label.add_theme_color_override("font_color", get_color("success.500"))
+	label.modulate.a = 0.0
+	center.add_child(label)
+
+	container.add_child(overlay)
+
+	# Animate entrance
+	var tween := container.create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(overlay, "modulate:a", 1.0, 0.2)
+	tween.tween_property(icon, "scale", Vector2.ONE, 0.4)\
+		.set_trans(Tween.TRANS_ELASTIC)\
+		.set_ease(Tween.EASE_OUT)
+
+	tween.chain().tween_property(label, "modulate:a", 1.0, 0.2)
+
+	# Auto-dismiss
+	tween.chain().tween_interval(duration)
+	tween.chain().tween_property(overlay, "modulate:a", 0.0, 0.2)
+	tween.chain().tween_callback(overlay.queue_free)
+
+	_play_ui_sound("success")
+
+	return overlay
+
+
+## Show error state with shake
+static func show_error_state(
+	container: Control,
+	message: String = "An error occurred",
+	retry_callback: Callable = Callable()
+) -> Control:
+	var overlay := ColorRect.new()
+	overlay.name = "ErrorOverlay"
+	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	overlay.color = Color(0.9, 0.2, 0.2, 0.1)
+	overlay.modulate.a = 0.0
+
+	var center := VBoxContainer.new()
+	center.alignment = BoxContainer.ALIGNMENT_CENTER
+	center.set_anchors_preset(Control.PRESET_CENTER)
+	center.add_theme_constant_override("separation", 16)
+	overlay.add_child(center)
+
+	var icon := Label.new()
+	icon.text = "X"
+	icon.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	icon.add_theme_font_size_override("font_size", 48)
+	icon.add_theme_color_override("font_color", get_color("error.500"))
+	center.add_child(icon)
+
+	var label := Label.new()
+	label.text = message
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.add_theme_font_size_override("font_size", 18)
+	label.add_theme_color_override("font_color", Color.WHITE)
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.custom_minimum_size.x = 300
+	center.add_child(label)
+
+	if retry_callback.is_valid():
+		var retry_btn := Button.new()
+		retry_btn.text = "Try Again"
+		retry_btn.custom_minimum_size = Vector2(120, 44)
+		retry_btn.pressed.connect(func():
+			_dismiss_overlay(overlay)
+			retry_callback.call()
+		)
+		center.add_child(retry_btn)
+		apply_button_microinteractions(retry_btn)
+
+	container.add_child(overlay)
+
+	# Fade in and shake
+	var tween := container.create_tween()
+	tween.tween_property(overlay, "modulate:a", 1.0, 0.15)
+
+	# Shake icon
+	var original_x: float = icon.position.x
+	for i: int in range(3):
+		tween.tween_property(icon, "position:x", original_x + 10, 0.05)
+		tween.tween_property(icon, "position:x", original_x - 10, 0.05)
+	tween.tween_property(icon, "position:x", original_x, 0.05)
+
+	_play_ui_sound("error")
+
+	return overlay
+
+
+static func _dismiss_overlay(overlay: Control) -> void:
+	var tween := overlay.create_tween()
+	tween.tween_property(overlay, "modulate:a", 0.0, 0.15)
+	tween.tween_callback(overlay.queue_free)
+
+# endregion
+
+
+# =============================================================================
+# region - Empty States
+# =============================================================================
+
+## Create an empty state placeholder with helpful guidance
+static func create_empty_state(
+	container: Control,
+	title: String,
+	description: String,
+	action_text: String = "",
+	action_callback: Callable = Callable()
+) -> Control:
+	var empty := VBoxContainer.new()
+	empty.name = "EmptyState"
+	empty.alignment = BoxContainer.ALIGNMENT_CENTER
+	empty.set_anchors_preset(Control.PRESET_CENTER)
+	empty.add_theme_constant_override("separation", 16)
+
+	var icon := Label.new()
+	icon.text = "?"
+	icon.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	icon.add_theme_font_size_override("font_size", 64)
+	icon.add_theme_color_override("font_color", get_color("neutral.400"))
+	empty.add_child(icon)
+
+	var title_label := Label.new()
+	title_label.text = title
+	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title_label.add_theme_font_size_override("font_size", 24)
+	title_label.add_theme_color_override("font_color", get_color("neutral.200"))
+	empty.add_child(title_label)
+
+	var desc_label := Label.new()
+	desc_label.text = description
+	desc_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	desc_label.add_theme_font_size_override("font_size", 14)
+	desc_label.add_theme_color_override("font_color", get_color("neutral.500"))
+	desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	desc_label.custom_minimum_size.x = 300
+	empty.add_child(desc_label)
+
+	if not action_text.is_empty() and action_callback.is_valid():
+		var action_btn := Button.new()
+		action_btn.text = action_text
+		action_btn.custom_minimum_size = Vector2(150, 44)
+		action_btn.pressed.connect(action_callback)
+		empty.add_child(action_btn)
+		apply_button_microinteractions(action_btn)
+
+	container.add_child(empty)
+
+	# Animate entrance
+	empty.modulate.a = 0.0
+	var tween := empty.create_tween()
+	tween.tween_property(empty, "modulate:a", 1.0, 0.3)
+
+	return empty
+
+# endregion
+
+
+# =============================================================================
+# region - Accessibility Helpers
+# =============================================================================
+
+## Apply WCAG AAA focus indicator to a control
+static func apply_focus_indicator(control: Control) -> void:
+	var focus_style := StyleBoxFlat.new()
+	focus_style.draw_center = false
+	focus_style.border_width_left = 3
+	focus_style.border_width_right = 3
+	focus_style.border_width_top = 3
+	focus_style.border_width_bottom = 3
+	focus_style.border_color = Color(1.0, 0.76, 0.03)  # High visibility yellow
+	focus_style.corner_radius_bottom_left = 6
+	focus_style.corner_radius_bottom_right = 6
+	focus_style.corner_radius_top_left = 6
+	focus_style.corner_radius_top_right = 6
+
+	control.add_theme_stylebox_override("focus", focus_style)
+
+
+## Validate and fix touch target size
+static func ensure_touch_target(control: Control, min_size: float = 44.0) -> void:
+	if control.custom_minimum_size.x < min_size:
+		control.custom_minimum_size.x = min_size
+	if control.custom_minimum_size.y < min_size:
+		control.custom_minimum_size.y = min_size
+
+
+## Set accessibility label for screen readers
+static func set_accessibility_label(control: Control, label: String) -> void:
+	control.set_meta("accessibility_label", label)
+
+
+## Get accessibility label
+static func get_accessibility_label(control: Control) -> String:
+	return control.get_meta("accessibility_label", control.name)
+
+# endregion
+
+
+# =============================================================================
+# region - Performance Utilities
+# =============================================================================
+
+## Check if animation should run based on user preferences
+static func should_animate() -> bool:
+	# Check for accessibility manager
+	var root := Engine.get_main_loop()
+	if root is SceneTree:
+		var access_mgr := root.root.get_node_or_null("AccessibilityManager")
+		if access_mgr and access_mgr.get("reduce_motion"):
+			return false
+	return true
+
+
+## Get adjusted animation duration for accessibility
+static func get_adjusted_duration(base_duration: float) -> float:
+	if not should_animate():
+		return 0.0
+
+	var root := Engine.get_main_loop()
+	if root is SceneTree:
+		var access_mgr := root.root.get_node_or_null("AccessibilityManager")
+		if access_mgr and access_mgr.has_method("get_animation_duration_multiplier"):
+			return base_duration * access_mgr.get_animation_duration_multiplier()
+
+	return base_duration
+
+# endregion
