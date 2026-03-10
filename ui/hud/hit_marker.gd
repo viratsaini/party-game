@@ -1,60 +1,60 @@
-## Hit marker visual feedback system with premium features.
-## Shows confirmation when player successfully hits an enemy.
-## Supports different styles for regular hits, headshots, and kills.
-## Features: combo tracking, damage numbers, expanding animations, screen effects.
+## Premium hit marker visual feedback system.
+## Features expanding circles, different colors for hit types, kill confirmation X,
+## damage numbers with bounce animation, combo system for rapid hits, and smooth effects.
+## Designed for competitive mobile game quality (PUBG/CoD/Apex style).
 class_name HitMarker
 extends Control
 
 ## Hit types for different visual feedback.
 enum HitType {
-	NORMAL,     ## Regular hit.
-	HEADSHOT,   ## Headshot/critical hit.
-	KILL,       ## Killing blow.
-	ASSIST,     ## Assist (partial damage).
+	NORMAL,        ## Regular hit.
+	HEADSHOT,      ## Headshot/critical hit.
+	KILL,          ## Killing blow.
+	ASSIST,        ## Assist (partial damage).
+	ARMOR_BREAK,   ## Broke enemy armor/shield.
 }
 
+## Signal emitted when a combo milestone is reached.
+signal combo_milestone(combo_count: int)
+
 ## Duration of hit marker animation.
-const MARKER_DURATION: float = 0.2
+const MARKER_DURATION: float = 0.25
+
+## Duration for kill markers (longer).
+const KILL_MARKER_DURATION: float = 0.4
+
+## Combo time window.
+const COMBO_WINDOW: float = 1.5
 
 ## Colors for different hit types.
-const NORMAL_COLOR: Color = Color.WHITE
-const HEADSHOT_COLOR: Color = Color(1.0, 0.85, 0.2, 1.0)
-const KILL_COLOR: Color = Color(1.0, 0.3, 0.2, 1.0)
-const ASSIST_COLOR: Color = Color(0.6, 0.8, 1.0, 1.0)
+const NORMAL_COLOR: Color = Color(1.0, 1.0, 1.0, 1.0)
+const HEADSHOT_COLOR: Color = Color(1.0, 0.85, 0.15, 1.0)
+const KILL_COLOR: Color = Color(1.0, 0.25, 0.2, 1.0)
+const ASSIST_COLOR: Color = Color(0.5, 0.8, 1.0, 1.0)
+const ARMOR_BREAK_COLOR: Color = Color(0.3, 0.7, 1.0, 1.0)
 
-## Size of the hit marker.
-const MARKER_SIZE: float = 12.0
+## Damage number colors.
+const DAMAGE_COLOR_LOW: Color = Color(1.0, 1.0, 1.0, 1.0)
+const DAMAGE_COLOR_MED: Color = Color(1.0, 0.85, 0.3, 1.0)
+const DAMAGE_COLOR_HIGH: Color = Color(1.0, 0.5, 0.2, 1.0)
+const DAMAGE_COLOR_CRITICAL: Color = Color(1.0, 0.2, 0.15, 1.0)
 
-## Line thickness.
+## Size constants.
+const BASE_MARKER_SIZE: float = 14.0
 const LINE_THICKNESS: float = 2.5
-
-## Gap from center.
-const CENTER_GAP: float = 6.0
-
-## Damage number settings.
-const DAMAGE_NUMBER_RISE_SPEED: float = 100.0
-const DAMAGE_NUMBER_FADE_TIME: float = 0.8
-const DAMAGE_NUMBER_COLOR: Color = Color(1.0, 0.9, 0.3, 1.0)
-
-## Combo settings.
-const COMBO_WINDOW: float = 3.0  ## Time window to maintain combo.
-const COMBO_COLOR: Color = Color(0.3, 0.8, 1.0, 1.0)
+const CENTER_GAP: float = 7.0
+const EXPANDING_CIRCLE_MAX_RADIUS: float = 35.0
 
 ## Active hit markers with animation state.
 var _active_markers: Array[Dictionary] = []
 
-## Floating damage numbers.
-## Each entry: {damage: float, position: Vector2, velocity: Vector2, alpha: float}
+## Active damage numbers.
 var _damage_numbers: Array[Dictionary] = []
 
-## Current combo count.
+## Combo tracking.
 var _combo_count: int = 0
-
-## Time since last hit (for combo tracking).
-var _time_since_last_hit: float = 0.0
-
-## Combo display alpha (fades in/out).
-var _combo_alpha: float = 0.0
+var _last_hit_time: float = 0.0
+var _combo_display_time: float = 0.0
 
 ## Cached center position.
 var _center: Vector2 = Vector2.ZERO
@@ -66,6 +66,8 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
+	var needs_redraw: bool = false
+
 	# Update active markers.
 	var i: int = _active_markers.size() - 1
 	while i >= 0:
@@ -74,6 +76,8 @@ func _process(delta: float) -> void:
 
 		if marker["time"] <= 0.0:
 			_active_markers.remove_at(i)
+		else:
+			needs_redraw = true
 
 		i -= 1
 
@@ -81,29 +85,35 @@ func _process(delta: float) -> void:
 	i = _damage_numbers.size() - 1
 	while i >= 0:
 		var dmg_num: Dictionary = _damage_numbers[i]
-		dmg_num["position"] = (dmg_num["position"] as Vector2) + (dmg_num["velocity"] as Vector2) * delta
-		dmg_num["alpha"] = (dmg_num["alpha"] as float) - delta / DAMAGE_NUMBER_FADE_TIME
+		dmg_num["time"] = (dmg_num["time"] as float) - delta
 
-		if dmg_num["alpha"] <= 0.0:
+		# Update position (float up).
+		dmg_num["offset_y"] = (dmg_num["offset_y"] as float) - delta * 60.0
+
+		if dmg_num["time"] <= 0.0:
 			_damage_numbers.remove_at(i)
+		else:
+			needs_redraw = true
+
 		i -= 1
 
 	# Update combo timer.
-	_time_since_last_hit += delta
-	if _time_since_last_hit > COMBO_WINDOW:
+	var current_time: float = Time.get_ticks_msec() / 1000.0
+	if _combo_count > 0 and current_time - _last_hit_time > COMBO_WINDOW:
 		_combo_count = 0
-		_combo_alpha = maxf(_combo_alpha - delta * 2.0, 0.0)
-	else:
-		_combo_alpha = minf(_combo_alpha + delta * 4.0, 1.0)
 
-	if not _active_markers.is_empty() or not _damage_numbers.is_empty() or _combo_alpha > 0.01:
+	if _combo_display_time > 0.0:
+		_combo_display_time -= delta
+		needs_redraw = true
+
+	if needs_redraw or not _active_markers.is_empty() or not _damage_numbers.is_empty():
 		queue_redraw()
 
 
 func _draw() -> void:
 	_center = size * 0.5
 
-	# Draw active hit markers.
+	# Draw active markers.
 	for marker: Dictionary in _active_markers:
 		_draw_marker(marker)
 
@@ -111,8 +121,8 @@ func _draw() -> void:
 	for dmg_num: Dictionary in _damage_numbers:
 		_draw_damage_number(dmg_num)
 
-	# Draw combo counter if active.
-	if _combo_count > 1 and _combo_alpha > 0.01:
+	# Draw combo counter.
+	if _combo_count >= 2 and _combo_display_time > 0.0:
 		_draw_combo_counter()
 
 
@@ -124,8 +134,8 @@ func _draw_marker(marker: Dictionary) -> void:
 	var progress: float = 1.0 - (time / duration)
 
 	# Animation values.
-	var alpha: float = 1.0 - progress
-	var scale: float = 1.0 + progress * 0.5
+	var alpha: float = 1.0 - progress * progress  # Quadratic fade.
+	var scale: float = 1.0 + progress * 0.4
 	var rotation: float = marker.get("rotation", 0.0) as float
 
 	# Get color based on hit type.
@@ -134,15 +144,26 @@ func _draw_marker(marker: Dictionary) -> void:
 
 	# Calculate marker dimensions.
 	var gap: float = CENTER_GAP * scale
-	var length: float = MARKER_SIZE * scale
+	var length: float = BASE_MARKER_SIZE * scale
 
-	# Draw X-shaped marker.
-	_draw_x_marker(_center, gap, length, rotation, color, hit_type == HitType.KILL)
+	# Draw based on hit type.
+	match hit_type:
+		HitType.KILL:
+			_draw_kill_marker(_center, gap, length, rotation, color, progress)
+		HitType.HEADSHOT:
+			_draw_headshot_marker(_center, gap, length, rotation, color, progress)
+		HitType.ARMOR_BREAK:
+			_draw_armor_break_marker(_center, gap, length, color, progress)
+		_:
+			_draw_standard_marker(_center, gap, length, rotation, color)
+
+	# Draw expanding circle for all hit types.
+	if marker.get("show_circle", false) as bool:
+		_draw_expanding_circle(_center, progress, color)
 
 
-## Draw X-shaped hit marker.
-func _draw_x_marker(center: Vector2, gap: float, length: float, rotation: float, color: Color, is_kill: bool) -> void:
-	# Four diagonal lines forming an X.
+## Draw standard X-shaped hit marker.
+func _draw_standard_marker(center: Vector2, gap: float, length: float, rotation: float, color: Color) -> void:
 	var cos_r: float = cos(rotation)
 	var sin_r: float = sin(rotation)
 
@@ -154,7 +175,6 @@ func _draw_x_marker(center: Vector2, gap: float, length: float, rotation: float,
 	]
 
 	for dir: Vector2 in directions:
-		# Rotate direction.
 		var rotated_dir: Vector2 = Vector2(
 			dir.x * cos_r - dir.y * sin_r,
 			dir.x * sin_r + dir.y * cos_r
@@ -163,24 +183,207 @@ func _draw_x_marker(center: Vector2, gap: float, length: float, rotation: float,
 		var start: Vector2 = center + rotated_dir * gap
 		var end: Vector2 = center + rotated_dir * (gap + length)
 
-		# Draw outline for better visibility.
+		# Outline.
 		var outline_color: Color = Color(0, 0, 0, color.a * 0.6)
 		draw_line(start, end, outline_color, LINE_THICKNESS + 2.0)
 
-		# Draw main line.
+		# Main line.
 		draw_line(start, end, color, LINE_THICKNESS)
 
-	# For kills, draw additional effect.
-	if is_kill:
-		_draw_kill_effect(center, gap + length, color)
 
+## Draw kill confirmation marker (X with additional effects).
+func _draw_kill_marker(center: Vector2, gap: float, length: float, rotation: float, color: Color, progress: float) -> void:
+	# Draw standard X.
+	_draw_standard_marker(center, gap, length, rotation, color)
 
-## Draw additional visual for kill confirmation.
-func _draw_kill_effect(center: Vector2, radius: float, color: Color) -> void:
-	# Draw expanding ring.
+	# Draw additional expanding ring.
+	var ring_radius: float = (gap + length) * (1.0 + progress * 0.5)
 	var ring_color: Color = color
-	ring_color.a *= 0.4
-	draw_arc(center, radius * 1.2, 0.0, TAU, 16, ring_color, 1.5)
+	ring_color.a *= 0.5 * (1.0 - progress)
+	draw_arc(center, ring_radius, 0.0, TAU, 32, ring_color, 2.0)
+
+	# Draw inner confirmation dot.
+	if progress < 0.3:
+		var dot_alpha: float = (0.3 - progress) / 0.3
+		var dot_color: Color = color
+		dot_color.a = dot_alpha
+		draw_circle(center, 3.0, dot_color)
+
+
+## Draw headshot marker (crown effect).
+func _draw_headshot_marker(center: Vector2, gap: float, length: float, rotation: float, color: Color, progress: float) -> void:
+	# Draw standard X with headshot color.
+	_draw_standard_marker(center, gap, length, rotation, color)
+
+	# Draw crown/star effect above.
+	var crown_y: float = center.y - gap - length - 8.0
+	var crown_scale: float = 1.0 + progress * 0.3
+	var crown_color: Color = color
+	crown_color.a *= 1.0 - progress * 0.5
+
+	# Simple crown shape.
+	var crown_width: float = 12.0 * crown_scale
+	var crown_height: float = 8.0 * crown_scale
+
+	var crown_points: PackedVector2Array = PackedVector2Array([
+		Vector2(center.x - crown_width, crown_y),
+		Vector2(center.x - crown_width * 0.5, crown_y - crown_height),
+		Vector2(center.x, crown_y - crown_height * 0.4),
+		Vector2(center.x + crown_width * 0.5, crown_y - crown_height),
+		Vector2(center.x + crown_width, crown_y),
+	])
+
+	# Draw crown outline.
+	var outline_color: Color = Color(0, 0, 0, crown_color.a * 0.6)
+	draw_polyline(crown_points, outline_color, 3.0)
+	draw_polyline(crown_points, crown_color, 2.0)
+
+	# Draw sparkle effect.
+	if progress < 0.5:
+		var sparkle_alpha: float = (0.5 - progress) / 0.5
+		var sparkle_color: Color = HEADSHOT_COLOR
+		sparkle_color.a = sparkle_alpha * 0.8
+
+		# Small sparkles around crown.
+		for j: int in range(3):
+			var sparkle_angle: float = -PI * 0.5 + (float(j) - 1.0) * 0.4
+			var sparkle_dist: float = crown_height + 5.0 + progress * 15.0
+			var sparkle_pos: Vector2 = Vector2(center.x, crown_y) + Vector2(cos(sparkle_angle), sin(sparkle_angle)) * sparkle_dist
+			draw_circle(sparkle_pos, 2.0, sparkle_color)
+
+
+## Draw armor break marker (shield crack effect).
+func _draw_armor_break_marker(center: Vector2, gap: float, length: float, color: Color, progress: float) -> void:
+	# Draw shield shape breaking.
+	var shield_size: float = gap + length
+	var crack_offset: float = progress * 8.0
+
+	# Left half.
+	var left_center: Vector2 = center + Vector2(-crack_offset, 0)
+	_draw_shield_half(left_center, shield_size, color, true, progress)
+
+	# Right half.
+	var right_center: Vector2 = center + Vector2(crack_offset, 0)
+	_draw_shield_half(right_center, shield_size, color, false, progress)
+
+	# Draw break particles.
+	if progress < 0.6:
+		var particle_alpha: float = (0.6 - progress) / 0.6
+		var particle_color: Color = ARMOR_BREAK_COLOR
+		particle_color.a = particle_alpha * 0.7
+
+		for j: int in range(4):
+			var angle: float = float(j) * PI * 0.5 + progress * 2.0
+			var dist: float = shield_size * 0.5 + progress * 20.0
+			var particle_pos: Vector2 = center + Vector2(cos(angle), sin(angle)) * dist
+			draw_circle(particle_pos, 2.5 * (1.0 - progress), particle_color)
+
+
+## Draw half of a shield shape.
+func _draw_shield_half(center: Vector2, sz: float, color: Color, is_left: bool, _progress: float) -> void:
+	var half_width: float = sz * 0.4
+	var height: float = sz * 0.8
+
+	var x_mult: float = -1.0 if is_left else 1.0
+
+	var points: PackedVector2Array = PackedVector2Array([
+		center + Vector2(0, -height * 0.5),
+		center + Vector2(half_width * x_mult, -height * 0.3),
+		center + Vector2(half_width * x_mult, height * 0.3),
+		center + Vector2(0, height * 0.5),
+	])
+
+	draw_polyline(points, color, 2.0)
+
+
+## Draw expanding circle effect.
+func _draw_expanding_circle(center: Vector2, progress: float, color: Color) -> void:
+	var radius: float = CENTER_GAP + progress * EXPANDING_CIRCLE_MAX_RADIUS
+	var circle_color: Color = color
+	circle_color.a *= (1.0 - progress) * 0.6
+
+	# Multiple rings for effect.
+	draw_arc(center, radius, 0.0, TAU, 32, circle_color, 2.0)
+
+	if progress < 0.5:
+		var inner_radius: float = CENTER_GAP + progress * EXPANDING_CIRCLE_MAX_RADIUS * 0.6
+		var inner_color: Color = color
+		inner_color.a *= (0.5 - progress) * 0.4
+		draw_arc(center, inner_radius, 0.0, TAU, 32, inner_color, 1.5)
+
+
+## Draw damage number.
+func _draw_damage_number(dmg_num: Dictionary) -> void:
+	var damage: int = dmg_num["damage"] as int
+	var time: float = dmg_num["time"] as float
+	var duration: float = dmg_num["duration"] as float
+	var offset_x: float = dmg_num["offset_x"] as float
+	var offset_y: float = dmg_num["offset_y"] as float
+	var is_critical: bool = dmg_num.get("is_critical", false) as bool
+
+	var progress: float = 1.0 - (time / duration)
+
+	# Calculate position with bounce.
+	var bounce: float = 0.0
+	if progress < 0.2:
+		bounce = sin(progress / 0.2 * PI) * 15.0
+	var pos: Vector2 = _center + Vector2(offset_x, offset_y - bounce)
+
+	# Calculate alpha with fade.
+	var alpha: float = 1.0
+	if progress > 0.7:
+		alpha = (1.0 - progress) / 0.3
+
+	# Calculate scale with pop.
+	var scale: float = 1.0
+	if progress < 0.15:
+		scale = 1.0 + (0.15 - progress) / 0.15 * 0.4
+
+	# Get color based on damage.
+	var color: Color = _get_damage_color(damage, is_critical)
+	color.a = alpha
+
+	# Draw damage text.
+	var font: Font = ThemeDB.fallback_font
+	var damage_text: String = str(damage)
+	var font_size: int = int(18 * scale)
+
+	if is_critical:
+		damage_text = damage_text + "!"
+		font_size = int(22 * scale)
+
+	var text_size: Vector2 = font.get_string_size(damage_text, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size)
+	var text_pos: Vector2 = Vector2(pos.x - text_size.x * 0.5, pos.y + text_size.y * 0.35)
+
+	# Shadow.
+	var shadow_color: Color = Color(0, 0, 0, alpha * 0.8)
+	draw_string(font, text_pos + Vector2(1, 1), damage_text, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size, shadow_color)
+	draw_string(font, text_pos + Vector2(-1, 1), damage_text, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size, shadow_color)
+
+	# Main text.
+	draw_string(font, text_pos, damage_text, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size, color)
+
+
+## Draw combo counter.
+func _draw_combo_counter() -> void:
+	var font: Font = ThemeDB.fallback_font
+	var combo_text: String = "x%d" % _combo_count
+
+	var alpha: float = minf(_combo_display_time / 0.5, 1.0)
+	var scale: float = 1.0 + (1.0 - alpha) * 0.2 if _combo_display_time > 0.8 else 1.0
+
+	var font_size: int = int(16 * scale)
+	var color: Color = _get_combo_color(_combo_count)
+	color.a = alpha
+
+	var text_size: Vector2 = font.get_string_size(combo_text, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size)
+	var pos: Vector2 = Vector2(_center.x + 40, _center.y - 20)
+	var text_pos: Vector2 = Vector2(pos.x - text_size.x * 0.5, pos.y + text_size.y * 0.35)
+
+	# Shadow.
+	draw_string(font, text_pos + Vector2(1, 1), combo_text, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size, Color(0, 0, 0, alpha * 0.7))
+	# Main.
+	draw_string(font, text_pos, combo_text, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size, color)
 
 
 ## Get color for hit type.
@@ -194,100 +397,95 @@ func _get_color_for_type(hit_type: HitType) -> Color:
 			return KILL_COLOR
 		HitType.ASSIST:
 			return ASSIST_COLOR
+		HitType.ARMOR_BREAK:
+			return ARMOR_BREAK_COLOR
 		_:
 			return NORMAL_COLOR
 
 
-## Draw a floating damage number.
-func _draw_damage_number(dmg_num: Dictionary) -> void:
-	var damage: float = dmg_num["damage"] as float
-	var pos: Vector2 = dmg_num["position"] as Vector2
-	var alpha: float = dmg_num["alpha"] as float
+## Get color for damage number.
+func _get_damage_color(damage: int, is_critical: bool) -> Color:
+	if is_critical:
+		return HEADSHOT_COLOR
 
-	var color: Color = DAMAGE_NUMBER_COLOR
-	color.a *= alpha
-
-	var text: String = str(int(damage))
-	var font_size: int = 24
-
-	# Draw outline for visibility.
-	var outline_color: Color = Color.BLACK
-	outline_color.a = alpha * 0.8
-
-	for offset: Vector2 in [Vector2(-1, -1), Vector2(1, -1), Vector2(-1, 1), Vector2(1, 1)]:
-		draw_string(ThemeDB.fallback_font, pos + offset, text, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size, outline_color)
-
-	draw_string(ThemeDB.fallback_font, pos, text, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size, color)
+	if damage >= 50:
+		return DAMAGE_COLOR_CRITICAL
+	elif damage >= 30:
+		return DAMAGE_COLOR_HIGH
+	elif damage >= 15:
+		return DAMAGE_COLOR_MED
+	else:
+		return DAMAGE_COLOR_LOW
 
 
-## Draw the combo counter.
-func _draw_combo_counter() -> void:
-	var combo_text: String = "x%d COMBO" % _combo_count
-	var combo_pos: Vector2 = _center + Vector2(0, 60)
+## Get color for combo counter.
+func _get_combo_color(combo: int) -> Color:
+	if combo >= 10:
+		return KILL_COLOR
+	elif combo >= 5:
+		return HEADSHOT_COLOR
+	else:
+		return NORMAL_COLOR
 
-	var color: Color = COMBO_COLOR
-	color.a *= _combo_alpha
 
-	var font_size: int = 28
+## Update combo tracking.
+func _update_combo() -> void:
+	var current_time: float = Time.get_ticks_msec() / 1000.0
 
-	# Outline for visibility.
-	var outline_color: Color = Color.BLACK
-	outline_color.a = _combo_alpha * 0.9
+	if current_time - _last_hit_time <= COMBO_WINDOW:
+		_combo_count += 1
+		if _combo_count in [5, 10, 15, 20]:
+			combo_milestone.emit(_combo_count)
+	else:
+		_combo_count = 1
 
-	for offset: Vector2 in [Vector2(-2, -2), Vector2(2, -2), Vector2(-2, 2), Vector2(2, 2)]:
-		draw_string(ThemeDB.fallback_font, combo_pos + offset, combo_text, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size, outline_color)
+	_last_hit_time = current_time
+	_combo_display_time = 1.0
 
-	draw_string(ThemeDB.fallback_font, combo_pos, combo_text, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size, color)
 
+# ── Public API ───────────────────────────────────────────────────────────────
 
 ## Show a hit marker.
-## [param hit_type] Type of hit for visual style.
-## [param damage] Damage amount (affects size and shows damage number).
-func show_hit(hit_type: HitType = HitType.NORMAL, damage: float = 25.0) -> void:
+func show_hit(hit_type: HitType = HitType.NORMAL, damage: float = 25.0, show_damage_number: bool = true) -> void:
 	var duration: float = MARKER_DURATION
 	if hit_type == HitType.KILL:
-		duration *= 1.5  # Kill markers last longer.
+		duration = KILL_MARKER_DURATION
 	elif hit_type == HitType.HEADSHOT:
-		duration *= 1.2
+		duration *= 1.3
 
-	# Scale based on damage.
-	var size_scale: float = clampf(damage / 50.0, 0.8, 1.5)
+	var show_circle: bool = hit_type == HitType.KILL or hit_type == HitType.HEADSHOT
 
 	_active_markers.append({
 		"type": hit_type,
 		"time": duration,
 		"duration": duration,
-		"rotation": randf() * 0.2 - 0.1,  # Slight random rotation.
-		"size_scale": size_scale,
+		"rotation": randf() * 0.15 - 0.075,
+		"show_circle": show_circle,
 	})
 
-	# Add floating damage number.
-	if damage > 0.0:
-		_add_damage_number(damage)
+	# Add damage number if requested.
+	if show_damage_number and damage > 0.0:
+		_add_damage_number(int(damage), hit_type == HitType.HEADSHOT)
 
-	# Update combo tracking.
-	_increment_combo()
+	# Update combo.
+	_update_combo()
 
 	queue_redraw()
 
 
-## Internal: Add a floating damage number.
-func _add_damage_number(damage: float) -> void:
-	# Randomize position slightly for variety.
-	var offset: Vector2 = Vector2(randf_range(-20, 20), randf_range(-10, 10))
+## Add a damage number display.
+func _add_damage_number(damage: int, is_critical: bool) -> void:
+	var offset_x: float = randf_range(-30.0, 30.0)
+	var offset_y: float = randf_range(-10.0, 10.0) - 40.0
 
 	_damage_numbers.append({
 		"damage": damage,
-		"position": _center + offset,
-		"velocity": Vector2(0, -DAMAGE_NUMBER_RISE_SPEED),
-		"alpha": 1.0,
+		"time": 1.0,
+		"duration": 1.0,
+		"offset_x": offset_x,
+		"offset_y": offset_y,
+		"is_critical": is_critical,
 	})
-
-
-## Internal: Increment combo counter.
-func _increment_combo() -> void:
-	_combo_count += 1
-	_time_since_last_hit = 0.0
 
 
 ## Convenience methods for specific hit types.
@@ -307,24 +505,23 @@ func show_assist(damage: float = 25.0) -> void:
 	show_hit(HitType.ASSIST, damage)
 
 
-## Clear all active markers.
-func clear() -> void:
-	_active_markers.clear()
-	_damage_numbers.clear()
-	_combo_count = 0
-	_combo_alpha = 0.0
-	_time_since_last_hit = 0.0
-	queue_redraw()
-
-
-## Reset combo counter (e.g., when round ends).
-func reset_combo() -> void:
-	_combo_count = 0
-	_combo_alpha = 0.0
-	_time_since_last_hit = 0.0
+func show_armor_break(damage: float = 0.0) -> void:
+	show_hit(HitType.ARMOR_BREAK, damage, false)
 
 
 ## Get current combo count.
 func get_combo_count() -> int:
 	return _combo_count
 
+
+## Reset combo.
+func reset_combo() -> void:
+	_combo_count = 0
+	_combo_display_time = 0.0
+
+
+## Clear all active markers.
+func clear() -> void:
+	_active_markers.clear()
+	_damage_numbers.clear()
+	queue_redraw()
