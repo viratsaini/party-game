@@ -84,6 +84,8 @@ func _ready() -> void:
 	# Initialize cel-shading system
 	if use_cel_shading:
 		_setup_cel_shading()
+		# Connect to global config changes
+		_connect_cel_shading_config()
 
 
 func _physics_process(delta: float) -> void:
@@ -440,5 +442,43 @@ func get_body_material() -> ShaderMaterial:
 	if _body_mesh:
 		return _body_mesh.material_override as ShaderMaterial
 	return null
+
+
+## Connect to global CelShadingConfig for live updates
+func _connect_cel_shading_config() -> void:
+	if not Engine.has_singleton("CelShadingConfig"):
+		# Config not available as autoload - check for node
+		var config := get_node_or_null("/root/CelShadingConfig")
+		if config:
+			if config.has_signal("quality_changed"):
+				config.quality_changed.connect(_on_global_quality_changed)
+			if config.has_signal("outlines_toggled"):
+				config.outlines_toggled.connect(_on_global_outlines_toggled)
+			if config.has_signal("settings_changed"):
+				config.settings_changed.connect(_on_global_settings_changed)
+
+
+## Handle global quality change
+func _on_global_quality_changed(new_quality: CelShadedMaterials.CelQuality) -> void:
+	set_cel_quality(new_quality)
+
+
+## Handle global outline toggle
+func _on_global_outlines_toggled(enabled: bool) -> void:
+	set_outline_visible(enabled)
+
+
+## Handle global settings change
+func _on_global_settings_changed() -> void:
+	# Re-apply materials with updated global settings
+	var config := get_node_or_null("/root/CelShadingConfig")
+	if config and _body_mesh:
+		var mat := _body_mesh.material_override as ShaderMaterial
+		if mat:
+			config.apply_to_material(mat)
+	if config and _body_outline:
+		var outline_mat := _body_outline.material_override as ShaderMaterial
+		if outline_mat:
+			config.apply_to_outline(outline_mat)
 
 #endregion

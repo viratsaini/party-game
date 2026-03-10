@@ -24,6 +24,8 @@ TutorialManager="*res://ui/tutorial/tutorial_manager.gd"
 ChatManager="*res://autoload/chat_manager.gd"
 NotificationManager="*res://autoload/notification_manager.gd"
 ParticleEffectsManager="*res://autoload/particle_effects_manager.gd"
+CelShadingConfig="*res://autoload/cel_shading_config.gd"
+GraphicsManager="*res://autoload/graphics_manager.gd"
 
 [display]
 
