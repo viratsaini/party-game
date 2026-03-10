@@ -26,27 +26,40 @@ layout_mode = 1
 anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
-offset_left = -250.0
-offset_top = 80.0
-offset_right = 250.0
-offset_bottom = 280.0
+offset_left = -300.0
+offset_top = 120.0
+offset_right = 300.0
+offset_bottom = 320.0
 grow_horizontal = 2
 alignment = 1
+theme_override_constants/separation = 10
 
 [node name="Title" type="Label" parent="TitleContainer"]
 layout_mode = 2
 text = "BATTLEZONE"
 horizontal_alignment = 1
 vertical_alignment = 1
-theme_override_font_sizes/font_size = 72
+theme_override_font_sizes/font_size = 82
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
 
 [node name="Subtitle" type="Label" parent="TitleContainer"]
 layout_mode = 2
 text = "PARTY"
 horizontal_alignment = 1
 vertical_alignment = 1
-theme_override_font_sizes/font_size = 42
+theme_override_font_sizes/font_size = 48
 theme_override_colors/font_color = Color(0.9, 0.7, 0.2, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+
+[node name="Tagline" type="Label" parent="TitleContainer"]
+layout_mode = 2
+text = "Compete. Connect. Conquer."
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(0.7, 0.7, 0.8, 1)
 
 [node name="ButtonContainer" type="VBoxContainer" parent="."]
 unique_name_in_owner = true
@@ -56,41 +69,41 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -180.0
-offset_top = -140.0
-offset_right = 180.0
-offset_bottom = 140.0
+offset_left = -200.0
+offset_top = -160.0
+offset_right = 200.0
+offset_bottom = 160.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 16
+theme_override_constants/separation = 20
 
 [node name="CreateButton" type="Button" parent="ButtonContainer"]
 unique_name_in_owner = true
 layout_mode = 2
-custom_minimum_size = Vector2(0, 65)
-text = "CREATE ROOM"
-theme_override_font_sizes/font_size = 28
+custom_minimum_size = Vector2(0, 70)
+text = "⚡ CREATE ROOM"
+theme_override_font_sizes/font_size = 30
 
 [node name="JoinButton" type="Button" parent="ButtonContainer"]
 unique_name_in_owner = true
 layout_mode = 2
-custom_minimum_size = Vector2(0, 65)
-text = "JOIN ROOM"
-theme_override_font_sizes/font_size = 28
+custom_minimum_size = Vector2(0, 70)
+text = "🔍 JOIN ROOM"
+theme_override_font_sizes/font_size = 30
 
 [node name="SettingsButton" type="Button" parent="ButtonContainer"]
 unique_name_in_owner = true
 layout_mode = 2
-custom_minimum_size = Vector2(0, 65)
-text = "SETTINGS"
-theme_override_font_sizes/font_size = 28
+custom_minimum_size = Vector2(0, 70)
+text = "⚙ SETTINGS"
+theme_override_font_sizes/font_size = 30
 
 [node name="QuitButton" type="Button" parent="ButtonContainer"]
 unique_name_in_owner = true
 layout_mode = 2
-custom_minimum_size = Vector2(0, 65)
-text = "QUIT"
-theme_override_font_sizes/font_size = 28
+custom_minimum_size = Vector2(0, 70)
+text = "✖ QUIT"
+theme_override_font_sizes/font_size = 30
 
 [node name="JoinPanel" type="PanelContainer" parent="."]
 unique_name_in_owner = true
@@ -101,56 +114,128 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -240.0
-offset_top = -220.0
-offset_right = 240.0
-offset_bottom = 220.0
+offset_left = -280.0
+offset_top = -360.0
+offset_right = 280.0
+offset_bottom = 360.0
 grow_horizontal = 2
 grow_vertical = 2
 
 [node name="VBox" type="VBoxContainer" parent="JoinPanel"]
 layout_mode = 2
-theme_override_constants/separation = 12
+theme_override_constants/separation = 16
 
 [node name="JoinTitle" type="Label" parent="JoinPanel/VBox"]
 layout_mode = 2
-text = "Join Game"
+text = "🎮 Join Game"
 horizontal_alignment = 1
-theme_override_font_sizes/font_size = 32
+theme_override_font_sizes/font_size = 36
+theme_override_colors/font_color = Color(0.9, 0.7, 0.2, 1)
 
-[node name="IPInput" type="LineEdit" parent="JoinPanel/VBox"]
-unique_name_in_owner = true
+[node name="Subtitle" type="Label" parent="JoinPanel/VBox"]
 layout_mode = 2
-custom_minimum_size = Vector2(0, 50)
-placeholder_text = "Enter IP address"
-theme_override_font_sizes/font_size = 24
-
-[node name="ConnectButton" type="Button" parent="JoinPanel/VBox"]
-unique_name_in_owner = true
-layout_mode = 2
-custom_minimum_size = Vector2(0, 60)
-text = "CONNECT"
-theme_override_font_sizes/font_size = 26
-
-[node name="OrLabel" type="Label" parent="JoinPanel/VBox"]
-layout_mode = 2
-text = "— Discovered Games —"
+text = "Select a game from nearby devices"
 horizontal_alignment = 1
-theme_override_font_sizes/font_size = 24
+autowrap_mode = 2
+theme_override_font_sizes/font_size = 20
 theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+
+[node name="SearchingLabel" type="Label" parent="JoinPanel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Searching for games..."
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(0.5, 0.8, 1, 1)
 
 [node name="DiscoveredGames" type="ItemList" parent="JoinPanel/VBox"]
 unique_name_in_owner = true
 layout_mode = 2
-custom_minimum_size = Vector2(0, 120)
+custom_minimum_size = Vector2(0, 320)
 theme_override_font_sizes/font_size = 24
+
+[node name="ButtonRow" type="HBoxContainer" parent="JoinPanel/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="RefreshButton" type="Button" parent="JoinPanel/VBox/ButtonRow"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(140, 60)
+text = "🔄 REFRESH"
+theme_override_font_sizes/font_size = 22
+
+[node name="ManualIPButton" type="Button" parent="JoinPanel/VBox/ButtonRow"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(140, 60)
+text = "⌨ MANUAL IP"
+theme_override_font_sizes/font_size = 22
 
 [node name="BackButton" type="Button" parent="JoinPanel/VBox"]
 unique_name_in_owner = true
 layout_mode = 2
 custom_minimum_size = Vector2(0, 60)
-text = "BACK"
+text = "← BACK"
 theme_override_font_sizes/font_size = 26
+
+[node name="ManualIPPanel" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -260.0
+offset_top = -200.0
+offset_right = 260.0
+offset_bottom = 200.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="ManualIPPanel"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Title" type="Label" parent="ManualIPPanel/VBox"]
+layout_mode = 2
+text = "Manual IP Connection"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 32
+theme_override_colors/font_color = Color(0.9, 0.7, 0.2, 1)
+
+[node name="InfoLabel" type="Label" parent="ManualIPPanel/VBox"]
+layout_mode = 2
+text = "Enter the host's IP address to connect directly"
+horizontal_alignment = 1
+autowrap_mode = 2
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+
+[node name="IPInput" type="LineEdit" parent="ManualIPPanel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 60)
+placeholder_text = "192.168.1.100"
+alignment = 1
+theme_override_font_sizes/font_size = 26
+
+[node name="ConnectButton" type="Button" parent="ManualIPPanel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 70)
+text = "CONNECT"
+theme_override_font_sizes/font_size = 28
+
+[node name="ManualBackButton" type="Button" parent="ManualIPPanel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 60)
+text = "← BACK"
+theme_override_font_sizes/font_size = 24
 
 [node name="SettingsPanel" type="PanelContainer" parent="."]
 unique_name_in_owner = true
@@ -161,30 +246,32 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -260.0
-offset_top = -240.0
-offset_right = 260.0
-offset_bottom = 240.0
+offset_left = -300.0
+offset_top = -340.0
+offset_right = 300.0
+offset_bottom = 340.0
 grow_horizontal = 2
 grow_vertical = 2
 
 [node name="VBox" type="VBoxContainer" parent="SettingsPanel"]
 layout_mode = 2
-theme_override_constants/separation = 14
+theme_override_constants/separation = 18
 
 [node name="SettingsTitle" type="Label" parent="SettingsPanel/VBox"]
 layout_mode = 2
-text = "Settings"
+text = "⚙ Settings"
 horizontal_alignment = 1
-theme_override_font_sizes/font_size = 32
+theme_override_font_sizes/font_size = 38
+theme_override_colors/font_color = Color(0.9, 0.7, 0.2, 1)
 
 [node name="NameRow" type="HBoxContainer" parent="SettingsPanel/VBox"]
 layout_mode = 2
+theme_override_constants/separation = 12
 
 [node name="NameLabel" type="Label" parent="SettingsPanel/VBox/NameRow"]
 layout_mode = 2
-custom_minimum_size = Vector2(120, 0)
-text = "Name:"
+custom_minimum_size = Vector2(140, 0)
+text = "Player Name:"
 vertical_alignment = 1
 theme_override_font_sizes/font_size = 26
 
@@ -192,17 +279,29 @@ theme_override_font_sizes/font_size = 26
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-custom_minimum_size = Vector2(0, 50)
-placeholder_text = "Enter name"
+custom_minimum_size = Vector2(0, 60)
+placeholder_text = "Enter your name"
 theme_override_font_sizes/font_size = 24
+max_length = 20
+
+[node name="Separator1" type="HSeparator" parent="SettingsPanel/VBox"]
+layout_mode = 2
+
+[node name="VolumeTitle" type="Label" parent="SettingsPanel/VBox"]
+layout_mode = 2
+text = "🔊 Audio Settings"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 28
+theme_override_colors/font_color = Color(0.8, 0.8, 0.9, 1)
 
 [node name="MasterRow" type="HBoxContainer" parent="SettingsPanel/VBox"]
 layout_mode = 2
+theme_override_constants/separation = 12
 
 [node name="MasterLabel" type="Label" parent="SettingsPanel/VBox/MasterRow"]
 layout_mode = 2
-custom_minimum_size = Vector2(120, 0)
-text = "Master"
+custom_minimum_size = Vector2(140, 0)
+text = "Master:"
 vertical_alignment = 1
 theme_override_font_sizes/font_size = 26
 
@@ -210,7 +309,7 @@ theme_override_font_sizes/font_size = 26
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-custom_minimum_size = Vector2(0, 40)
+custom_minimum_size = Vector2(0, 50)
 min_value = 0.0
 max_value = 1.0
 step = 0.05
@@ -218,11 +317,12 @@ value = 1.0
 
 [node name="MusicRow" type="HBoxContainer" parent="SettingsPanel/VBox"]
 layout_mode = 2
+theme_override_constants/separation = 12
 
 [node name="MusicLabel" type="Label" parent="SettingsPanel/VBox/MusicRow"]
 layout_mode = 2
-custom_minimum_size = Vector2(120, 0)
-text = "Music"
+custom_minimum_size = Vector2(140, 0)
+text = "Music:"
 vertical_alignment = 1
 theme_override_font_sizes/font_size = 26
 
@@ -230,7 +330,7 @@ theme_override_font_sizes/font_size = 26
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-custom_minimum_size = Vector2(0, 40)
+custom_minimum_size = Vector2(0, 50)
 min_value = 0.0
 max_value = 1.0
 step = 0.05
@@ -238,11 +338,12 @@ value = 0.8
 
 [node name="SFXRow" type="HBoxContainer" parent="SettingsPanel/VBox"]
 layout_mode = 2
+theme_override_constants/separation = 12
 
 [node name="SFXLabel" type="Label" parent="SettingsPanel/VBox/SFXRow"]
 layout_mode = 2
-custom_minimum_size = Vector2(120, 0)
-text = "SFX"
+custom_minimum_size = Vector2(140, 0)
+text = "SFX:"
 vertical_alignment = 1
 theme_override_font_sizes/font_size = 26
 
@@ -250,7 +351,7 @@ theme_override_font_sizes/font_size = 26
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-custom_minimum_size = Vector2(0, 40)
+custom_minimum_size = Vector2(0, 50)
 min_value = 0.0
 max_value = 1.0
 step = 0.05
@@ -259,9 +360,9 @@ value = 1.0
 [node name="SettingsBackButton" type="Button" parent="SettingsPanel/VBox"]
 unique_name_in_owner = true
 layout_mode = 2
-custom_minimum_size = Vector2(0, 60)
-text = "BACK"
-theme_override_font_sizes/font_size = 26
+custom_minimum_size = Vector2(0, 70)
+text = "← BACK"
+theme_override_font_sizes/font_size = 28
 
 [node name="VersionLabel" type="Label" parent="."]
 unique_name_in_owner = true
@@ -271,13 +372,14 @@ anchor_left = 0.5
 anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
-offset_left = -80.0
-offset_top = -40.0
-offset_right = 80.0
+offset_left = -100.0
+offset_top = -60.0
+offset_right = 100.0
+offset_bottom = -20.0
 grow_horizontal = 2
 grow_vertical = 0
 text = "v0.1.0"
 horizontal_alignment = 1
 vertical_alignment = 2
-theme_override_font_sizes/font_size = 18
-theme_override_colors/font_color = Color(0.5, 0.5, 0.5, 1)
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(0.5, 0.5, 0.6, 1)
