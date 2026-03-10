@@ -34,6 +34,12 @@ extends Control
 @onready var sfx_slider: HSlider = %SFXSlider
 @onready var settings_back_button: Button = %SettingsBackButton
 
+# Graphics settings
+@onready var quality_option: OptionButton = %QualityOption
+@onready var bloom_toggle: CheckButton = %BloomToggle
+@onready var vignette_toggle: CheckButton = %VignetteToggle
+@onready var effects_toggle: CheckButton = %EffectsToggle
+
 @onready var version_label: Label = %VersionLabel
 
 # Tutorial

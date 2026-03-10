@@ -262,112 +262,198 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 14
 
-[node name="SettingsTitle" type="Label" parent="SettingsPanel/VBox"]
+[node name="SettingsTitle" type="Label" parent="SettingsPanel/ScrollContainer/VBox"]
 layout_mode = 2
-text = "⚙ Settings"
+text = "Settings"
 horizontal_alignment = 1
 theme_override_font_sizes/font_size = 38
 theme_override_colors/font_color = Color(0.9, 0.7, 0.2, 1)
 
-[node name="NameRow" type="HBoxContainer" parent="SettingsPanel/VBox"]
+[node name="NameRow" type="HBoxContainer" parent="SettingsPanel/ScrollContainer/VBox"]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="NameLabel" type="Label" parent="SettingsPanel/VBox/NameRow"]
+[node name="NameLabel" type="Label" parent="SettingsPanel/ScrollContainer/VBox/NameRow"]
 layout_mode = 2
 custom_minimum_size = Vector2(140, 0)
 text = "Player Name:"
 vertical_alignment = 1
-theme_override_font_sizes/font_size = 26
+theme_override_font_sizes/font_size = 24
 
-[node name="NameInput" type="LineEdit" parent="SettingsPanel/VBox/NameRow"]
+[node name="NameInput" type="LineEdit" parent="SettingsPanel/ScrollContainer/VBox/NameRow"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-custom_minimum_size = Vector2(0, 60)
+custom_minimum_size = Vector2(0, 55)
 placeholder_text = "Enter your name"
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 22
 max_length = 20
 
-[node name="Separator1" type="HSeparator" parent="SettingsPanel/VBox"]
+[node name="Separator1" type="HSeparator" parent="SettingsPanel/ScrollContainer/VBox"]
 layout_mode = 2
 
-[node name="VolumeTitle" type="Label" parent="SettingsPanel/VBox"]
+[node name="GraphicsTitle" type="Label" parent="SettingsPanel/ScrollContainer/VBox"]
 layout_mode = 2
-text = "🔊 Audio Settings"
+text = "Graphics"
 horizontal_alignment = 1
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 26
 theme_override_colors/font_color = Color(0.8, 0.8, 0.9, 1)
 
-[node name="MasterRow" type="HBoxContainer" parent="SettingsPanel/VBox"]
+[node name="QualityRow" type="HBoxContainer" parent="SettingsPanel/ScrollContainer/VBox"]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="MasterLabel" type="Label" parent="SettingsPanel/VBox/MasterRow"]
+[node name="QualityLabel" type="Label" parent="SettingsPanel/ScrollContainer/VBox/QualityRow"]
 layout_mode = 2
 custom_minimum_size = Vector2(140, 0)
-text = "Master:"
+text = "Quality:"
 vertical_alignment = 1
-theme_override_font_sizes/font_size = 26
+theme_override_font_sizes/font_size = 24
 
-[node name="MasterSlider" type="HSlider" parent="SettingsPanel/VBox/MasterRow"]
+[node name="QualityOption" type="OptionButton" parent="SettingsPanel/ScrollContainer/VBox/QualityRow"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 custom_minimum_size = Vector2(0, 50)
+theme_override_font_sizes/font_size = 22
+selected = 1
+
+[node name="BloomRow" type="HBoxContainer" parent="SettingsPanel/ScrollContainer/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="BloomLabel" type="Label" parent="SettingsPanel/ScrollContainer/VBox/BloomRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(140, 0)
+text = "Bloom:"
+vertical_alignment = 1
+theme_override_font_sizes/font_size = 24
+
+[node name="BloomToggle" type="CheckButton" parent="SettingsPanel/ScrollContainer/VBox/BloomRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+button_pressed = true
+text = "Enabled"
+theme_override_font_sizes/font_size = 20
+
+[node name="VignetteRow" type="HBoxContainer" parent="SettingsPanel/ScrollContainer/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="VignetteLabel" type="Label" parent="SettingsPanel/ScrollContainer/VBox/VignetteRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(140, 0)
+text = "Vignette:"
+vertical_alignment = 1
+theme_override_font_sizes/font_size = 24
+
+[node name="VignetteToggle" type="CheckButton" parent="SettingsPanel/ScrollContainer/VBox/VignetteRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+button_pressed = true
+text = "Enabled"
+theme_override_font_sizes/font_size = 20
+
+[node name="EffectsRow" type="HBoxContainer" parent="SettingsPanel/ScrollContainer/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="EffectsLabel" type="Label" parent="SettingsPanel/ScrollContainer/VBox/EffectsRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(140, 0)
+text = "Effects:"
+vertical_alignment = 1
+theme_override_font_sizes/font_size = 24
+
+[node name="EffectsToggle" type="CheckButton" parent="SettingsPanel/ScrollContainer/VBox/EffectsRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+button_pressed = false
+text = "Chromatic/Motion"
+theme_override_font_sizes/font_size = 20
+
+[node name="Separator2" type="HSeparator" parent="SettingsPanel/ScrollContainer/VBox"]
+layout_mode = 2
+
+[node name="VolumeTitle" type="Label" parent="SettingsPanel/ScrollContainer/VBox"]
+layout_mode = 2
+text = "Audio"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 26
+theme_override_colors/font_color = Color(0.8, 0.8, 0.9, 1)
+
+[node name="MasterRow" type="HBoxContainer" parent="SettingsPanel/ScrollContainer/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="MasterLabel" type="Label" parent="SettingsPanel/ScrollContainer/VBox/MasterRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(140, 0)
+text = "Master:"
+vertical_alignment = 1
+theme_override_font_sizes/font_size = 24
+
+[node name="MasterSlider" type="HSlider" parent="SettingsPanel/ScrollContainer/VBox/MasterRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 45)
 min_value = 0.0
 max_value = 1.0
 step = 0.05
 value = 1.0
 
-[node name="MusicRow" type="HBoxContainer" parent="SettingsPanel/VBox"]
+[node name="MusicRow" type="HBoxContainer" parent="SettingsPanel/ScrollContainer/VBox"]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="MusicLabel" type="Label" parent="SettingsPanel/VBox/MusicRow"]
+[node name="MusicLabel" type="Label" parent="SettingsPanel/ScrollContainer/VBox/MusicRow"]
 layout_mode = 2
 custom_minimum_size = Vector2(140, 0)
 text = "Music:"
 vertical_alignment = 1
-theme_override_font_sizes/font_size = 26
+theme_override_font_sizes/font_size = 24
 
-[node name="MusicSlider" type="HSlider" parent="SettingsPanel/VBox/MusicRow"]
+[node name="MusicSlider" type="HSlider" parent="SettingsPanel/ScrollContainer/VBox/MusicRow"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-custom_minimum_size = Vector2(0, 50)
+custom_minimum_size = Vector2(0, 45)
 min_value = 0.0
 max_value = 1.0
 step = 0.05
 value = 0.8
 
-[node name="SFXRow" type="HBoxContainer" parent="SettingsPanel/VBox"]
+[node name="SFXRow" type="HBoxContainer" parent="SettingsPanel/ScrollContainer/VBox"]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="SFXLabel" type="Label" parent="SettingsPanel/VBox/SFXRow"]
+[node name="SFXLabel" type="Label" parent="SettingsPanel/ScrollContainer/VBox/SFXRow"]
 layout_mode = 2
 custom_minimum_size = Vector2(140, 0)
 text = "SFX:"
 vertical_alignment = 1
-theme_override_font_sizes/font_size = 26
+theme_override_font_sizes/font_size = 24
 
-[node name="SFXSlider" type="HSlider" parent="SettingsPanel/VBox/SFXRow"]
+[node name="SFXSlider" type="HSlider" parent="SettingsPanel/ScrollContainer/VBox/SFXRow"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-custom_minimum_size = Vector2(0, 50)
+custom_minimum_size = Vector2(0, 45)
 min_value = 0.0
 max_value = 1.0
 step = 0.05
 value = 1.0
 
-[node name="SettingsBackButton" type="Button" parent="SettingsPanel/VBox"]
+[node name="SettingsBackButton" type="Button" parent="SettingsPanel/ScrollContainer/VBox"]
 unique_name_in_owner = true
 layout_mode = 2
-custom_minimum_size = Vector2(0, 70)
-text = "← BACK"
-theme_override_font_sizes/font_size = 28
+custom_minimum_size = Vector2(0, 65)
+text = "BACK"
+theme_override_font_sizes/font_size = 26
 
 [node name="VersionLabel" type="Label" parent="."]
 unique_name_in_owner = true

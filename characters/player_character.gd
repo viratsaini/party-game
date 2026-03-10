@@ -1,6 +1,6 @@
 ## Main player controller for BattleZone Party.
 ## Shared across all mini-games. Handles movement, combat interface,
-## input from touch/keyboard, and multiplayer synchronization.
+## input from touch/keyboard, multiplayer synchronization, and ragdoll physics.
 class_name PlayerCharacter
 extends CharacterBody3D
 
@@ -13,6 +13,10 @@ signal died(peer_id: int)
 signal respawned(peer_id: int)
 ## Emitted when the player triggers their primary action (shoot, grab, etc.).
 signal action_triggered()
+## Emitted when ragdoll is activated with force and hit information.
+signal ragdoll_activated(force: Vector3, hit_point: Vector3)
+## Emitted when ragdoll is deactivated (recovery complete or instant).
+signal ragdoll_deactivated()
 #endregion
 
 #region Exports
