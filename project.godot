@@ -6,7 +6,7 @@
 
 config/name="BattleZone Party"
 config/description="Local multiplayer 3D party game — connect via WiFi, Bluetooth, or Internet and compete with friends in 5 action-packed mini-games!"
-config/version="0.1.0"
+config/version="0.1.1"
 config/tags=PackedStringArray("3d", "multiplayer", "mobile", "party")
 run/main_scene="res://ui/main_menu/main_menu.tscn"
 config/features=PackedStringArray("4.6", "Mobile")
