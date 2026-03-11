@@ -1,6 +1,6 @@
 ## Main player controller for BattleZone Party.
 ## Shared across all mini-games. Handles movement, combat interface,
-## input from touch/keyboard, and multiplayer synchronization.
+## input from touch/keyboard, multiplayer synchronization, and ragdoll physics.
 class_name PlayerCharacter
 extends CharacterBody3D
 
@@ -13,6 +13,10 @@ signal died(peer_id: int)
 signal respawned(peer_id: int)
 ## Emitted when the player triggers their primary action (shoot, grab, etc.).
 signal action_triggered()
+## Emitted when ragdoll is activated with force and hit information.
+signal ragdoll_activated(force: Vector3, hit_point: Vector3)
+## Emitted when ragdoll is deactivated (recovery complete or instant).
+signal ragdoll_deactivated()
 #endregion
 
 #region Exports
@@ -21,6 +25,14 @@ signal action_triggered()
 @export var jump_force: float = 8.0
 @export var gravity_multiplier: float = 1.0
 @export var rotation_speed: float = 10.0
+
+## Cel-shading configuration
+@export_group("Cel Shading")
+@export var use_cel_shading: bool = true
+@export var cel_quality: CelShadedMaterials.CelQuality = CelShadedMaterials.CelQuality.MEDIUM
+@export var show_outline: bool = true
+@export var base_body_color: Color = Color(0.6, 0.6, 0.6, 1.0)
+@export var base_head_color: Color = Color(0.7, 0.7, 0.7, 1.0)
 #endregion
 
 #region State
@@ -49,6 +61,13 @@ var _head_mesh: MeshInstance3D
 var _name_label: Label3D
 var _camera_mount: Node3D
 var _camera: Camera3D
+
+# Outline mesh instances for cel-shading
+var _body_outline: MeshInstance3D
+var _head_outline: MeshInstance3D
+
+# Current team color (for cel-shading)
+var _current_team_color: Color = Color(-1, -1, -1)
 #endregion
 
 
@@ -65,6 +84,12 @@ func _ready() -> void:
 	# Only the local player owns its camera.
 	if _camera:
 		_camera.current = _is_local_player()
+
+	# Initialize cel-shading system
+	if use_cel_shading:
+		_setup_cel_shading()
+		# Connect to global config changes
+		_connect_cel_shading_config()
 
 
 func _physics_process(delta: float) -> void:
@@ -236,14 +261,21 @@ func setup_for_authority(id: int) -> void:
 
 ## Apply the primary body color to the mesh material.
 func set_player_color(color: Color) -> void:
-	if _body_mesh and _body_mesh.mesh:
-		var mat := StandardMaterial3D.new()
-		mat.albedo_color = color
-		_body_mesh.material_override = mat
-	if _head_mesh and _head_mesh.mesh:
-		var head_mat := StandardMaterial3D.new()
-		head_mat.albedo_color = color
-		_head_mesh.material_override = head_mat
+	_current_team_color = color
+
+	if use_cel_shading:
+		# Use cel-shaded materials with team color
+		_apply_cel_shaded_color(color)
+	else:
+		# Fallback to standard materials
+		if _body_mesh and _body_mesh.mesh:
+			var mat := StandardMaterial3D.new()
+			mat.albedo_color = color
+			_body_mesh.material_override = mat
+		if _head_mesh and _head_mesh.mesh:
+			var head_mat := StandardMaterial3D.new()
+			head_mat.albedo_color = color
+			_head_mesh.material_override = head_mat
 
 
 ## Set the floating name label text.
@@ -260,5 +292,197 @@ func _is_local_player() -> bool:
 	if not multiplayer or not multiplayer.has_multiplayer_peer():
 		return true  # Single-player / editor preview.
 	return peer_id == multiplayer.get_unique_id()
+
+#endregion
+
+#region Cel-Shading System -----------------------------------------------------
+
+## Initialize the cel-shading system with outline meshes
+func _setup_cel_shading() -> void:
+	# Apply cel-shaded materials to body
+	if _body_mesh and _body_mesh.mesh:
+		var body_mat := CelShadedMaterials.create_cel_material_for_quality(
+			base_body_color, cel_quality, "character"
+		)
+		_body_mesh.material_override = body_mat
+
+		# Create outline mesh for body
+		if show_outline:
+			_body_outline = _create_outline_mesh(_body_mesh, "character")
+
+	# Apply cel-shaded materials to head
+	if _head_mesh and _head_mesh.mesh:
+		var head_mat := CelShadedMaterials.create_cel_material_for_quality(
+			base_head_color, cel_quality, "character"
+		)
+		_head_mesh.material_override = head_mat
+
+		# Create outline mesh for head
+		if show_outline:
+			_head_outline = _create_outline_mesh(_head_mesh, "character")
+
+
+## Create an outline mesh for the given source mesh
+func _create_outline_mesh(source: MeshInstance3D, preset: String) -> MeshInstance3D:
+	var outline := MeshInstance3D.new()
+	outline.name = source.name + "_Outline"
+	outline.mesh = source.mesh
+	outline.transform = source.transform
+
+	# Apply outline material
+	var outline_mat := CelShadedMaterials.create_outline_material(preset)
+	outline.material_override = outline_mat
+
+	# Add as sibling (not child, to avoid transform issues)
+	source.add_sibling(outline)
+
+	return outline
+
+
+## Apply cel-shaded color with team color support
+func _apply_cel_shaded_color(team_color: Color) -> void:
+	if _body_mesh:
+		var body_mat := CelShadedMaterials.create_team_cel_material(
+			base_body_color, team_color, 0.6
+		)
+		# Adjust for quality
+		_adjust_material_quality(body_mat)
+		_body_mesh.material_override = body_mat
+
+		# Update outline with team tint
+		if _body_outline:
+			var outline_mat := CelShadedMaterials.create_team_outline_material(
+				team_color, "character"
+			)
+			_body_outline.material_override = outline_mat
+
+	if _head_mesh:
+		var head_mat := CelShadedMaterials.create_team_cel_material(
+			base_head_color, team_color, 0.5
+		)
+		_adjust_material_quality(head_mat)
+		_head_mesh.material_override = head_mat
+
+		# Update outline with team tint
+		if _head_outline:
+			var outline_mat := CelShadedMaterials.create_team_outline_material(
+				team_color, "character"
+			)
+			_head_outline.material_override = outline_mat
+
+
+## Adjust material settings based on quality level
+func _adjust_material_quality(mat: ShaderMaterial) -> void:
+	match cel_quality:
+		CelShadedMaterials.CelQuality.LOW:
+			mat.set_shader_parameter("cel_levels", 3)
+			mat.set_shader_parameter("enable_rim_light", false)
+			mat.set_shader_parameter("enable_specular", false)
+		CelShadedMaterials.CelQuality.MEDIUM:
+			mat.set_shader_parameter("cel_levels", 4)
+			mat.set_shader_parameter("enable_rim_light", true)
+			mat.set_shader_parameter("enable_specular", false)
+		CelShadedMaterials.CelQuality.HIGH:
+			mat.set_shader_parameter("cel_levels", 5)
+			mat.set_shader_parameter("enable_rim_light", true)
+			mat.set_shader_parameter("enable_specular", true)
+
+
+## Toggle cel-shading on/off at runtime
+func set_cel_shading_enabled(enabled: bool) -> void:
+	use_cel_shading = enabled
+	if enabled:
+		_setup_cel_shading()
+		if _current_team_color.r >= 0:
+			_apply_cel_shaded_color(_current_team_color)
+	else:
+		# Remove outline meshes
+		if _body_outline:
+			_body_outline.queue_free()
+			_body_outline = null
+		if _head_outline:
+			_head_outline.queue_free()
+			_head_outline = null
+
+		# Revert to standard materials
+		if _current_team_color.r >= 0:
+			if _body_mesh:
+				var mat := StandardMaterial3D.new()
+				mat.albedo_color = _current_team_color
+				_body_mesh.material_override = mat
+			if _head_mesh:
+				var head_mat := StandardMaterial3D.new()
+				head_mat.albedo_color = _current_team_color
+				_head_mesh.material_override = head_mat
+
+
+## Toggle outline visibility
+func set_outline_visible(visible: bool) -> void:
+	show_outline = visible
+	if _body_outline:
+		_body_outline.visible = visible
+	if _head_outline:
+		_head_outline.visible = visible
+
+
+## Set cel-shading quality at runtime
+func set_cel_quality(quality: CelShadedMaterials.CelQuality) -> void:
+	cel_quality = quality
+	if use_cel_shading:
+		_setup_cel_shading()
+		if _current_team_color.r >= 0:
+			_apply_cel_shaded_color(_current_team_color)
+
+
+## Get the current outline material for body (for external modification)
+func get_body_outline_material() -> ShaderMaterial:
+	if _body_outline:
+		return _body_outline.material_override as ShaderMaterial
+	return null
+
+
+## Get the current body material (for external modification)
+func get_body_material() -> ShaderMaterial:
+	if _body_mesh:
+		return _body_mesh.material_override as ShaderMaterial
+	return null
+
+
+## Connect to global CelShadingConfig for live updates
+func _connect_cel_shading_config() -> void:
+	if not Engine.has_singleton("CelShadingConfig"):
+		# Config not available as autoload - check for node
+		var config := get_node_or_null("/root/CelShadingConfig")
+		if config:
+			if config.has_signal("quality_changed"):
+				config.quality_changed.connect(_on_global_quality_changed)
+			if config.has_signal("outlines_toggled"):
+				config.outlines_toggled.connect(_on_global_outlines_toggled)
+			if config.has_signal("settings_changed"):
+				config.settings_changed.connect(_on_global_settings_changed)
+
+
+## Handle global quality change
+func _on_global_quality_changed(new_quality: CelShadedMaterials.CelQuality) -> void:
+	set_cel_quality(new_quality)
+
+
+## Handle global outline toggle
+func _on_global_outlines_toggled(enabled: bool) -> void:
+	set_outline_visible(enabled)
+
+
+## Handle global settings change
+func _on_global_settings_changed() -> void:
+	# Re-apply materials with updated global settings
+	var config := get_node_or_null("/root/CelShadingConfig")
+	if config and _body_mesh:
+		var mat := _body_mesh.material_override as ShaderMaterial
+		if mat:
+			config.apply_to_material(mat)
+	if config and _body_outline:
+		var outline_mat := _body_outline.material_override as ShaderMaterial
+		if outline_mat:
+			config.apply_to_outline(outline_mat)
 
 #endregion

@@ -1,0 +1,237 @@
+[gd_scene load_steps=8 format=3 uid="uid://ragdoll_skeleton"]
+
+[ext_resource type="Script" path="res://characters/ragdoll_system.gd" id="1_ragdoll"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_bounce"]
+bounce = 0.5
+friction = 0.4
+rough = true
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_pelvis"]
+radius = 0.2
+height = 0.4
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_pelvis"]
+radius = 0.2
+height = 0.4
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ragdoll"]
+albedo_color = Color(0.8, 0.2, 0.2, 1)
+emission_enabled = true
+emission = Color(0.5, 0.1, 0.1, 1)
+emission_energy_multiplier = 0.5
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_torso"]
+radius = 0.18
+height = 0.5
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_torso"]
+radius = 0.18
+height = 0.5
+
+[node name="RagdollSkeleton" type="Node3D"]
+script = ExtResource("1_ragdoll")
+
+[node name="Info" type="Node" parent="."]
+editor_description = "Ragdoll Skeleton for BattleZone Party characters.
+This scene provides a pre-configured physics skeleton that can be
+dynamically spawned and attached to any PlayerCharacter.
+
+The skeleton uses simplified joint configurations optimized for:
+- Fun, exaggerated physics
+- Mobile performance (<1ms per ragdoll)
+- Network synchronization efficiency
+
+To use: Instance this scene and call setup(character_node) or
+let the RagdollSystem auto-generate the skeleton."
+
+[node name="Pelvis" type="RigidBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
+mass = 3.0
+physics_material_override = SubResource("PhysicsMaterial_bounce")
+gravity_scale = 0.7
+linear_damp = 0.1
+angular_damp = 0.3
+collision_layer = 8
+collision_mask = 3
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Pelvis"]
+shape = SubResource("CapsuleShape3D_pelvis")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Pelvis"]
+mesh = SubResource("CapsuleMesh_pelvis")
+surface_material_override/0 = SubResource("StandardMaterial3D_ragdoll")
+
+[node name="Torso" type="RigidBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0, 0)
+mass = 2.5
+physics_material_override = SubResource("PhysicsMaterial_bounce")
+gravity_scale = 0.7
+linear_damp = 0.1
+angular_damp = 0.3
+collision_layer = 8
+collision_mask = 3
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Torso"]
+shape = SubResource("CapsuleShape3D_torso")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Torso"]
+mesh = SubResource("CapsuleMesh_torso")
+surface_material_override/0 = SubResource("StandardMaterial3D_ragdoll")
+
+[node name="Head" type="RigidBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4, 0)
+mass = 1.0
+physics_material_override = SubResource("PhysicsMaterial_bounce")
+gravity_scale = 0.7
+linear_damp = 0.1
+angular_damp = 0.3
+collision_layer = 8
+collision_mask = 3
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Head"]
+shape = SubResource("CapsuleShape3D_pelvis")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Head"]
+mesh = SubResource("CapsuleMesh_pelvis")
+surface_material_override/0 = SubResource("StandardMaterial3D_ragdoll")
+
+[node name="ArmLeft" type="RigidBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.4, 0.95, 0)
+mass = 0.8
+physics_material_override = SubResource("PhysicsMaterial_bounce")
+gravity_scale = 0.7
+linear_damp = 0.1
+angular_damp = 0.3
+collision_layer = 8
+collision_mask = 3
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ArmLeft"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0)
+shape = SubResource("CapsuleShape3D_torso")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="ArmLeft"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0)
+mesh = SubResource("CapsuleMesh_torso")
+surface_material_override/0 = SubResource("StandardMaterial3D_ragdoll")
+
+[node name="ArmRight" type="RigidBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.4, 0.95, 0)
+mass = 0.8
+physics_material_override = SubResource("PhysicsMaterial_bounce")
+gravity_scale = 0.7
+linear_damp = 0.1
+angular_damp = 0.3
+collision_layer = 8
+collision_mask = 3
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ArmRight"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0)
+shape = SubResource("CapsuleShape3D_torso")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="ArmRight"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0)
+mesh = SubResource("CapsuleMesh_torso")
+surface_material_override/0 = SubResource("StandardMaterial3D_ragdoll")
+
+[node name="LegLeft" type="RigidBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.15, 0.15, 0)
+mass = 1.2
+physics_material_override = SubResource("PhysicsMaterial_bounce")
+gravity_scale = 0.7
+linear_damp = 0.1
+angular_damp = 0.3
+collision_layer = 8
+collision_mask = 3
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="LegLeft"]
+shape = SubResource("CapsuleShape3D_torso")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="LegLeft"]
+mesh = SubResource("CapsuleMesh_torso")
+surface_material_override/0 = SubResource("StandardMaterial3D_ragdoll")
+
+[node name="LegRight" type="RigidBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.15, 0.15, 0)
+mass = 1.2
+physics_material_override = SubResource("PhysicsMaterial_bounce")
+gravity_scale = 0.7
+linear_damp = 0.1
+angular_damp = 0.3
+collision_layer = 8
+collision_mask = 3
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="LegRight"]
+shape = SubResource("CapsuleShape3D_torso")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="LegRight"]
+mesh = SubResource("CapsuleMesh_torso")
+surface_material_override/0 = SubResource("StandardMaterial3D_ragdoll")
+
+[node name="Joints" type="Node3D" parent="."]
+
+[node name="Pelvis_to_Torso" type="Generic6DOFJoint3D" parent="Joints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
+node_a = NodePath("../../Pelvis")
+node_b = NodePath("../../Torso")
+angular_limit_x/upper_angle = 45.0
+angular_limit_x/lower_angle = -45.0
+angular_limit_y/upper_angle = 30.0
+angular_limit_y/lower_angle = -30.0
+angular_limit_z/upper_angle = 30.0
+angular_limit_z/lower_angle = -30.0
+
+[node name="Torso_to_Head" type="Generic6DOFJoint3D" parent="Joints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 0)
+node_a = NodePath("../../Torso")
+node_b = NodePath("../../Head")
+angular_limit_x/upper_angle = 60.0
+angular_limit_x/lower_angle = -60.0
+angular_limit_y/upper_angle = 80.0
+angular_limit_y/lower_angle = -80.0
+angular_limit_z/upper_angle = 45.0
+angular_limit_z/lower_angle = -45.0
+
+[node name="Torso_to_ArmLeft" type="Generic6DOFJoint3D" parent="Joints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.25, 1.0, 0)
+node_a = NodePath("../../Torso")
+node_b = NodePath("../../ArmLeft")
+angular_limit_x/upper_angle = 120.0
+angular_limit_x/lower_angle = -120.0
+angular_limit_y/upper_angle = 90.0
+angular_limit_y/lower_angle = -90.0
+angular_limit_z/upper_angle = 90.0
+angular_limit_z/lower_angle = -90.0
+
+[node name="Torso_to_ArmRight" type="Generic6DOFJoint3D" parent="Joints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.25, 1.0, 0)
+node_a = NodePath("../../Torso")
+node_b = NodePath("../../ArmRight")
+angular_limit_x/upper_angle = 120.0
+angular_limit_x/lower_angle = -120.0
+angular_limit_y/upper_angle = 90.0
+angular_limit_y/lower_angle = -90.0
+angular_limit_z/upper_angle = 90.0
+angular_limit_z/lower_angle = -90.0
+
+[node name="Pelvis_to_LegLeft" type="Generic6DOFJoint3D" parent="Joints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.15, 0.4, 0)
+node_a = NodePath("../../Pelvis")
+node_b = NodePath("../../LegLeft")
+angular_limit_x/upper_angle = 90.0
+angular_limit_x/lower_angle = -30.0
+angular_limit_y/upper_angle = 45.0
+angular_limit_y/lower_angle = -45.0
+angular_limit_z/upper_angle = 30.0
+angular_limit_z/lower_angle = -30.0
+
+[node name="Pelvis_to_LegRight" type="Generic6DOFJoint3D" parent="Joints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.15, 0.4, 0)
+node_a = NodePath("../../Pelvis")
+node_b = NodePath("../../LegRight")
+angular_limit_x/upper_angle = 90.0
+angular_limit_x/lower_angle = -30.0
+angular_limit_y/upper_angle = 45.0
+angular_limit_y/lower_angle = -45.0
+angular_limit_z/upper_angle = 30.0
+angular_limit_z/lower_angle = -30.0

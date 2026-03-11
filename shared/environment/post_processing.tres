@@ -1,0 +1,119 @@
+[gd_resource type="Environment" format=3 uid="uid://bpp_post_processing"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_pp"]
+sky_top_color = Color(0.35, 0.55, 0.85, 1)
+sky_horizon_color = Color(0.65, 0.75, 0.9, 1)
+ground_bottom_color = Color(0.25, 0.28, 0.25, 1)
+ground_horizon_color = Color(0.55, 0.6, 0.55, 1)
+sun_angle_max = 45.0
+sun_curve = 0.1
+
+[sub_resource type="Sky" id="Sky_pp"]
+sky_material = SubResource("ProceduralSkyMaterial_pp")
+process_mode = 3
+radiance_size = 2
+
+[resource]
+# =====================================================================
+# BATTLEZONE PARTY - PROFESSIONAL POST-PROCESSING ENVIRONMENT
+# =====================================================================
+# Optimized for GL Compatibility renderer and mobile devices.
+# All effects tuned for competitive party game feel with AAA polish.
+# Performance target: <5ms for all effects combined.
+# =====================================================================
+
+# -- Background --
+background_mode = 2
+sky = SubResource("Sky_pp")
+
+# -- Ambient Light --
+ambient_light_source = 2
+ambient_light_color = Color(0.65, 0.68, 0.75, 1)
+ambient_light_energy = 0.6
+
+# -- Reflected Light (from sky) --
+reflected_light_source = 1
+
+# -- Tonemap (ACES for cinematic color) --
+tonemap_mode = 3
+tonemap_exposure = 1.0
+tonemap_white = 1.0
+
+# -- Screen Space Ambient Occlusion (SSAO) --
+# Subtle contact shadows for depth. Disabled by default for mobile.
+ssao_enabled = false
+ssao_radius = 0.5
+ssao_intensity = 1.0
+ssao_power = 1.5
+ssao_detail = 0.5
+ssao_horizon = 0.06
+ssao_sharpness = 0.98
+ssao_light_affect = 0.0
+
+# -- Screen Space Indirect Lighting (SSIL) --
+# Disabled for mobile performance
+ssil_enabled = false
+ssil_radius = 4.0
+ssil_intensity = 0.8
+ssil_sharpness = 0.98
+ssil_normal_rejection = 1.0
+
+# -- Screen Space Reflections (SSR) --
+# Disabled for GL Compatibility
+ssr_enabled = false
+
+# -- Signed Distance Field Global Illumination (SDFGI) --
+# Disabled for GL Compatibility / mobile
+sdfgi_enabled = false
+
+# -- Glow / Bloom --
+# Creates that AAA "pop" on bright surfaces, projectiles, and UI elements.
+glow_enabled = true
+glow_normalized = false
+glow_intensity = 0.4
+glow_strength = 0.8
+glow_mix = 0.2
+glow_bloom = 0.1
+glow_hdr_threshold = 0.8
+glow_hdr_scale = 2.0
+glow_hdr_luminance_cap = 12.0
+glow_map_strength = 0.0
+
+# Glow levels (lower = sharper, higher = softer bloom spread)
+glow_levels/1 = 0.0
+glow_levels/2 = 0.0
+glow_levels/3 = 1.0
+glow_levels/4 = 0.8
+glow_levels/5 = 0.6
+glow_levels/6 = 0.3
+glow_levels/7 = 0.0
+
+# -- Fog (Volumetric disabled for mobile) --
+fog_enabled = false
+fog_light_color = Color(0.7, 0.75, 0.85, 1)
+fog_light_energy = 0.8
+fog_sun_scatter = 0.02
+fog_density = 0.001
+fog_sky_affect = 0.3
+fog_height = 0.0
+fog_height_density = 0.0
+
+# -- Volumetric Fog --
+volumetric_fog_enabled = false
+volumetric_fog_density = 0.01
+volumetric_fog_albedo = Color(1, 1, 1, 1)
+volumetric_fog_emission = Color(0, 0, 0, 1)
+volumetric_fog_emission_energy = 0.0
+volumetric_fog_anisotropy = 0.2
+volumetric_fog_length = 64.0
+volumetric_fog_detail_spread = 2.0
+volumetric_fog_gi_inject = 0.0
+volumetric_fog_temporal_reprojection_enabled = true
+volumetric_fog_temporal_reprojection_amount = 0.9
+
+# -- Adjustments (Color Grading) --
+# Slightly boosted saturation and vibrance for party game feel.
+adjustment_enabled = true
+adjustment_brightness = 1.02
+adjustment_contrast = 1.1
+adjustment_saturation = 1.15
