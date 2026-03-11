@@ -971,17 +971,17 @@ func _adjust_lod_for_performance(avg_frame_time: float) -> void:
 	var new_lod: LODLevel = _current_lod
 
 	if avg_frame_time < FRAME_TIME_EXCELLENT:
-		# Excellent performance - can increase quality
+		# Excellent performance - can increase quality (decrease LOD level number)
 		if _current_lod > LODLevel.ULTRA:
-			new_lod = LODLevel(_current_lod - 1)
+			new_lod = LODLevel.values()[int(_current_lod) - 1]
 	elif avg_frame_time > FRAME_TIME_POOR:
-		# Poor performance - must decrease quality
+		# Poor performance - must decrease quality (increase LOD level number)
 		if _current_lod < LODLevel.MINIMAL:
-			new_lod = LODLevel(_current_lod + 1)
+			new_lod = LODLevel.values()[int(_current_lod) + 1]
 	elif avg_frame_time > FRAME_TIME_OK:
-		# OK performance - slightly decrease if not already low
+		# OK performance - slightly decrease if not already low (increase LOD level number)
 		if _current_lod < LODLevel.LOW:
-			new_lod = LODLevel(_current_lod + 1)
+			new_lod = LODLevel.values()[int(_current_lod) + 1]
 
 	if new_lod != _current_lod:
 		_set_lod(new_lod)

@@ -81,28 +81,28 @@ theme_override_constants/separation = 20
 unique_name_in_owner = true
 layout_mode = 2
 custom_minimum_size = Vector2(0, 70)
-text = "⚡ CREATE ROOM"
+text = "CREATE ROOM"
 theme_override_font_sizes/font_size = 30
 
 [node name="JoinButton" type="Button" parent="ButtonContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 custom_minimum_size = Vector2(0, 70)
-text = "🔍 JOIN ROOM"
+text = "JOIN ROOM"
 theme_override_font_sizes/font_size = 30
 
 [node name="SettingsButton" type="Button" parent="ButtonContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 custom_minimum_size = Vector2(0, 70)
-text = "⚙ SETTINGS"
+text = "SETTINGS"
 theme_override_font_sizes/font_size = 30
 
 [node name="QuitButton" type="Button" parent="ButtonContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 custom_minimum_size = Vector2(0, 70)
-text = "✖ QUIT"
+text = "QUIT"
 theme_override_font_sizes/font_size = 30
 
 [node name="JoinPanel" type="PanelContainer" parent="."]

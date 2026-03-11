@@ -122,7 +122,7 @@ var scroll_velocity: float = 0.0
 ## Tooltip timer.
 var tooltip_timer: float = 0.0
 var tooltip_target: Control = null
-var tooltip_text: String = ""
+var _internal_tooltip_text: String = ""
 
 ## Currently focused keybind button (for rebinding).
 var active_keybind: Control = null
@@ -1521,7 +1521,7 @@ func _create_confirmation_dialog(message: String, on_confirm: Callable) -> Contr
 
 func _show_tooltip(target: Control, text: String) -> void:
 	tooltip_target = target
-	tooltip_text = text
+	_internal_tooltip_text = text
 	tooltip_timer = 0.0
 
 
@@ -1542,7 +1542,7 @@ func _update_tooltip(delta: float) -> void:
 
 
 func _display_tooltip() -> void:
-	tooltip_label.text = tooltip_text
+	tooltip_label.text = _internal_tooltip_text
 	tooltip_panel.visible = true
 	tooltip_panel.modulate.a = 0.0
 
