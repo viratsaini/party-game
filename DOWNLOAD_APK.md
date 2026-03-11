@@ -6,7 +6,7 @@ Your game APK has been successfully built and is ready for download!
 
 **File Location:** `export/BattleZoneParty.apk`
 **File Size:** 29 MB
-**Version:** 0.1.0
+**Version:** 0.1.1
 **Build Type:** Debug (signed with debug keystore)
 
 ## 📱 How to Install on Your Android Device
@@ -181,5 +181,5 @@ Gather your friends, connect your devices, and battle it out in this epic mobile
 
 **Built with:** Godot 4.6.1
 **License:** Check repository LICENSE file
-**Version:** 0.1.0 (Debug Build)
+**Version:** 0.1.1 (Debug Build)
 **Build Date:** March 11, 2026

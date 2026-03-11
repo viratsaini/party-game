@@ -13,7 +13,7 @@ Your Android APK has been successfully built and is ready for download!
 | **File Name** | BattleZoneParty.apk |
 | **Location** | `export/BattleZoneParty.apk` |
 | **Size** | 29 MB |
-| **Version** | 0.1.0 |
+| **Version** | 0.1.1 |
 | **Build Type** | Debug (signed) |
 | **Architecture** | ARM64 (arm64-v8a) |
 | **Min Android** | 5.0 (Lollipop) |
