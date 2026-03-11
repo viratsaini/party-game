@@ -8,7 +8,8 @@
 .import/
 
 # Export files
-export/*.apk
+# Allow specific APK to be committed
+# export/*.apk
 export/*.aab
 export/*.idsig
 export/*.apk.idsig
