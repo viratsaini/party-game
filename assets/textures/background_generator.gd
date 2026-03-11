@@ -135,7 +135,7 @@ static func generate_cyber_grid(
 	# Fill with base gradient
 	for y in range(height):
 		var t: float = float(y) / float(height)
-		var base_color := scheme["primary"].lerp(scheme["secondary"], t)
+		var base_color: Color = scheme["primary"].lerp(scheme["secondary"], t)
 		for x in range(width):
 			image.set_pixel(x, y, base_color)
 
@@ -209,7 +209,7 @@ static func generate_particle_field(
 	# Fill with gradient base
 	for y in range(height):
 		var t: float = float(y) / float(height)
-		var base_color := scheme["primary"].lerp(scheme["secondary"], t * 0.5)
+		var base_color: Color = scheme["primary"].lerp(scheme["secondary"], t * 0.5)
 		for x in range(width):
 			image.set_pixel(x, y, base_color)
 
@@ -240,7 +240,7 @@ static func generate_particle_field(
 		var cx := rng.randi() % width
 		var cy := rng.randi() % height
 		var radius := rng.randf_range(100, 300)
-		var nebula_color := scheme["accent"]
+		var nebula_color: Color = scheme["accent"]
 		nebula_color.a = rng.randf_range(0.02, 0.06)
 		_draw_nebula_patch(image, cx, cy, radius, nebula_color)
 
@@ -261,7 +261,7 @@ static func generate_hexagon_pattern(
 	# Fill base
 	for y in range(height):
 		var t: float = float(y) / float(height)
-		var base_color := scheme["primary"].lerp(scheme["secondary"], t)
+		var base_color: Color = scheme["primary"].lerp(scheme["secondary"], t)
 		for x in range(width):
 			image.set_pixel(x, y, base_color)
 
@@ -283,7 +283,7 @@ static func generate_hexagon_pattern(
 			var max_dist := sqrt(pow(width, 2) + pow(height, 2)) * 0.5
 			var dist_factor := 1.0 - clampf(center_dist / max_dist, 0.0, 1.0)
 
-			var hex_color := scheme["accent"]
+			var hex_color: Color = scheme["accent"]
 			hex_color.a = 0.1 + dist_factor * 0.15
 
 			_draw_hexagon(image, int(x_pos), int(y_pos), hex_size, hex_color, 2)
@@ -310,16 +310,16 @@ static func generate_circuit_board(
 	# Fill base
 	for y in range(height):
 		var t: float = float(y) / float(height)
-		var base_color := scheme["primary"].lerp(scheme["secondary"], t)
+		var base_color: Color = scheme["primary"].lerp(scheme["secondary"], t)
 		for x in range(width):
 			image.set_pixel(x, y, base_color)
 
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_value
 
-	var trace_color := scheme["accent"]
+	var trace_color: Color = scheme["accent"]
 	trace_color.a = 0.4
-	var node_color := scheme["highlight"]
+	var node_color: Color = scheme["highlight"]
 	node_color.a = 0.6
 
 	# Draw circuit traces
@@ -385,14 +385,14 @@ static func generate_layered_background(
 			var max_dist := sqrt(pow(width, 2) + pow(height, 2)) * 0.6
 			var t: float = clampf(dist / max_dist, 0.0, 1.0)
 			t = t * t
-			var color := scheme["primary"].lerp(scheme["secondary"], t)
+			var color: Color = scheme["primary"].lerp(scheme["secondary"], t)
 			image.set_pixel(x, y, color)
 
 	# Layer 2: Subtle vignette
 	_apply_vignette(image, 0.3)
 
 	# Layer 3: Top accent glow
-	var glow_color := scheme["accent"]
+	var glow_color: Color = scheme["accent"]
 	glow_color.a = 0.15
 	for y in range(mini(400, height)):
 		var t: float = float(y) / 400.0
@@ -504,14 +504,14 @@ static func _draw_hexagon(image: Image, cx: int, cy: int, size: int, color: Colo
 
 
 static func _draw_line(image: Image, x1: int, y1: int, x2: int, y2: int, color: Color, thickness: int) -> void:
-	var dx := abs(x2 - x1)
-	var dy := abs(y2 - y1)
-	var sx := 1 if x1 < x2 else -1
-	var sy := 1 if y1 < y2 else -1
-	var err := dx - dy
+	var dx: int = abs(x2 - x1)
+	var dy: int = abs(y2 - y1)
+	var sx: int = 1 if x1 < x2 else -1
+	var sy: int = 1 if y1 < y2 else -1
+	var err: int = dx - dy
 
-	var x := x1
-	var y := y1
+	var x: int = x1
+	var y: int = y1
 
 	while true:
 		# Draw with thickness

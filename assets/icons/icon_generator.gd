@@ -141,7 +141,7 @@ static func generate_icon_set(
 ) -> Dictionary:
 	var icons := {}
 	for icon_type in IconType.values():
-		var type_name := IconType.keys()[icon_type].to_lower()
+		var type_name: String = IconType.keys()[icon_type].to_lower()
 		icons[type_name] = generate_icon(icon_type, size, color)
 	return icons
 
@@ -757,28 +757,28 @@ static func _draw_circle_outline(image: Image, cx: int, cy: int, radius: int, co
 
 
 static func _draw_thick_line(image: Image, x1: int, y1: int, x2: int, y2: int, color: Color, thickness: int) -> void:
-	var dx := abs(x2 - x1)
-	var dy := abs(y2 - y1)
-	var sx := 1 if x1 < x2 else -1
-	var sy := 1 if y1 < y2 else -1
-	var err := dx - dy
+	var dx: int = abs(x2 - x1)
+	var dy: int = abs(y2 - y1)
+	var sx: int = 1 if x1 < x2 else -1
+	var sy: int = 1 if y1 < y2 else -1
+	var err: int = dx - dy
 
-	var x := x1
-	var y := y1
+	var x: int = x1
+	var y: int = y1
 
 	while true:
 		for ty in range(-thickness / 2, thickness / 2 + 1):
 			for tx in range(-thickness / 2, thickness / 2 + 1):
-				var px := x + tx
-				var py := y + ty
+				var px: int = x + tx
+				var py: int = y + ty
 				if px >= 0 and px < image.get_width() and py >= 0 and py < image.get_height():
-					var existing := image.get_pixel(px, py)
+					var existing: Color = image.get_pixel(px, py)
 					image.set_pixel(px, py, _alpha_blend(existing, color))
 
 		if x == x2 and y == y2:
 			break
 
-		var e2 := 2 * err
+		var e2: int = 2 * err
 		if e2 > -dy:
 			err -= dy
 			x += sx
