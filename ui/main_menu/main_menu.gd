@@ -121,6 +121,9 @@ var _active_panel: PanelContainer = null
 var _grid_offset: float = 0.0
 var _vignette_pulse: float = 0.0
 
+## Entrance animation guard - prevents breathing/snap from conflicting with cascade
+var _entrance_animation_playing: bool = false
+
 ## Round 2 - Advanced state
 var _background_shader_material: ShaderMaterial = null
 var _title_shader_material: ShaderMaterial = null
@@ -593,6 +596,8 @@ func _update_shader_time_of_day() -> void:
 # ══════════════════════════════════════════════════════════════════════════════
 
 func _update_button_breathing(delta: float) -> void:
+	if _entrance_animation_playing:
+		return
 	if not button_container.visible:
 		return
 
@@ -1036,6 +1041,8 @@ func _update_parallax(_delta: float) -> void:
 
 
 func _update_magnetic_snap() -> void:
+	if _entrance_animation_playing:
+		return
 	if not button_container.visible:
 		return
 
@@ -1070,6 +1077,8 @@ func _update_magnetic_snap() -> void:
 # ══════════════════════════════════════════════════════════════════════════════
 
 func _play_ultra_entrance_animation() -> void:
+	_entrance_animation_playing = true
+
 	# Hide everything first
 	if is_instance_valid(title_container):
 		title_container.modulate.a = 0.0
@@ -1098,18 +1107,23 @@ func _ensure_ui_visible() -> void:
 		title_container.modulate.a = 1.0
 		push_warning("MainMenu: Failsafe activated - forcing title_container visible")
 
-	if is_instance_valid(button_container) and button_container.modulate.a < 0.1:
-		button_container.modulate.a = 1.0
-		push_warning("MainMenu: Failsafe activated - forcing button_container visible")
+	if is_instance_valid(button_container):
+		if button_container.modulate.a < 0.1:
+			button_container.modulate.a = 1.0
+			push_warning("MainMenu: Failsafe activated - forcing button_container visible")
 
-		# Make sure all buttons are visible too
+		# Always check individual button visibility regardless of container state
 		var buttons: Array = [create_button, join_button, settings_button, quit_button]
 		for button in buttons:
 			if button != null and button.modulate.a < 0.1:
 				button.modulate.a = 1.0
+				button.scale = Vector2.ONE
+				push_warning("MainMenu: Failsafe activated - forcing button visible: %s" % button.name)
 
 	if is_instance_valid(version_label) and version_label.modulate.a < 0.1:
 		version_label.modulate.a = 1.0
+
+	_entrance_animation_playing = false
 
 
 func _animate_logo_glitch_reveal() -> void:
@@ -1186,8 +1200,10 @@ func _animate_logo_glitch_reveal() -> void:
 func _animate_button_cascade() -> void:
 	if not is_instance_valid(button_container):
 		push_error("MainMenu: button_container is null")
+		_entrance_animation_playing = false
 		return
 
+	_entrance_animation_playing = true
 	button_container.modulate.a = 1.0
 
 	var buttons: Array = [create_button, join_button, settings_button, quit_button]
@@ -1228,6 +1244,14 @@ func _animate_button_cascade() -> void:
 		delay += BUTTON_CASCADE_DELAY
 
 	await get_tree().create_timer(delay + 0.3).timeout
+
+	# Guarantee all buttons are fully visible after animation completes
+	for button in buttons:
+		if button != null:
+			button.modulate.a = 1.0
+			button.scale = Vector2.ONE
+
+	_entrance_animation_playing = false
 
 
 func _animate_version_fade() -> void:
