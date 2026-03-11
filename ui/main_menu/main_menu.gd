@@ -142,6 +142,7 @@ var _button_use_counts: Dictionary = {}
 func _ready() -> void:
 	_load_player_profile()
 	_setup_ui()
+	_apply_modern_styling()  # Apply professional button styling
 	_setup_effects()
 	_setup_round2_effects()
 	_connect_signals()
@@ -249,6 +250,40 @@ func _setup_button_pivots() -> void:
 	var buttons: Array[Button] = [create_button, join_button, settings_button, quit_button]
 	for button in buttons:
 		button.pivot_offset = button.size / 2
+
+
+func _apply_modern_styling() -> void:
+	"""Apply professional button styles with modern gaming aesthetics."""
+	# Load procedural asset generator
+	var ui_generator = preload("res://assets/procedural_ui_assets.gd").new()
+	add_child(ui_generator)
+
+	# Apply professional button styles
+	ui_generator.apply_button_style(create_button, 0)  # PRIMARY
+	ui_generator.apply_button_style(join_button, 0)    # PRIMARY
+	ui_generator.apply_button_style(settings_button, 1) # SECONDARY
+	ui_generator.apply_button_style(quit_button, 3)    # DANGER
+
+	# Generate and apply professional background
+	var bg_generator = preload("res://assets/textures/background_generator.gd").new()
+	var bg_texture = bg_generator.generate_cyber_grid(1080, 1920, "battlezone")
+
+	var bg_rect = $Background as ColorRect
+	if bg_rect:
+		# Convert ColorRect to TextureRect for background
+		var tex_rect = TextureRect.new()
+		tex_rect.name = "BackgroundTexture"
+		tex_rect.texture = bg_texture
+		tex_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+		tex_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		tex_rect.stretch_mode = TextureRect.STRETCH_SCALE
+		add_child(tex_rect)
+		move_child(tex_rect, 0)  # Behind everything
+		bg_rect.color = Color(0.08, 0.08, 0.14, 0.5)  # Semi-transparent overlay
+
+	bg_generator.queue_free()
+
+	print("[MainMenu] Modern styling applied - buttons are now 140px with 48pt font")
 
 
 func _store_button_positions() -> void:
@@ -1036,9 +1071,16 @@ func _update_magnetic_snap() -> void:
 
 func _play_ultra_entrance_animation() -> void:
 	# Hide everything first
-	title_container.modulate.a = 0.0
-	button_container.modulate.a = 0.0
-	version_label.modulate.a = 0.0
+	if is_instance_valid(title_container):
+		title_container.modulate.a = 0.0
+	if is_instance_valid(button_container):
+		button_container.modulate.a = 0.0
+	if is_instance_valid(version_label):
+		version_label.modulate.a = 0.0
+
+	# Add a failsafe timer to ensure UI becomes visible even if animations fail
+	var failsafe_timer := get_tree().create_timer(3.0)
+	failsafe_timer.timeout.connect(_ensure_ui_visible)
 
 	# Logo glitch reveal
 	await _animate_logo_glitch_reveal()
@@ -1050,10 +1092,41 @@ func _play_ultra_entrance_animation() -> void:
 	_animate_version_fade()
 
 
+func _ensure_ui_visible() -> void:
+	# Failsafe function to make UI visible if animations failed
+	if is_instance_valid(title_container) and title_container.modulate.a < 0.1:
+		title_container.modulate.a = 1.0
+		push_warning("MainMenu: Failsafe activated - forcing title_container visible")
+
+	if is_instance_valid(button_container) and button_container.modulate.a < 0.1:
+		button_container.modulate.a = 1.0
+		push_warning("MainMenu: Failsafe activated - forcing button_container visible")
+
+		# Make sure all buttons are visible too
+		var buttons: Array = [create_button, join_button, settings_button, quit_button]
+		for button in buttons:
+			if button != null and button.modulate.a < 0.1:
+				button.modulate.a = 1.0
+
+	if is_instance_valid(version_label) and version_label.modulate.a < 0.1:
+		version_label.modulate.a = 1.0
+
+
 func _animate_logo_glitch_reveal() -> void:
-	var title: Label = title_container.get_node("Title")
-	var subtitle: Label = title_container.get_node("Subtitle")
-	var tagline: Label = title_container.get_node("Tagline")
+	# Add null safety checks
+	if not is_instance_valid(title_container):
+		push_error("MainMenu: title_container is null")
+		return
+
+	var title: Label = title_container.get_node_or_null("Title")
+	var subtitle: Label = title_container.get_node_or_null("Subtitle")
+	var tagline: Label = title_container.get_node_or_null("Tagline")
+
+	if title == null or subtitle == null or tagline == null:
+		push_error("MainMenu: One or more title nodes not found")
+		# Fallback: just make title_container visible
+		title_container.modulate.a = 1.0
+		return
 
 	title_container.modulate.a = 1.0
 
@@ -1111,12 +1184,21 @@ func _animate_logo_glitch_reveal() -> void:
 
 
 func _animate_button_cascade() -> void:
+	if not is_instance_valid(button_container):
+		push_error("MainMenu: button_container is null")
+		return
+
 	button_container.modulate.a = 1.0
 
 	var buttons: Array = [create_button, join_button, settings_button, quit_button]
-	var delay: float = 0.0
+	var delay: float = 0.0  # Add back the delay variable
 
+	# Null safety check for buttons
 	for button in buttons:
+		if button == null:
+			push_warning("MainMenu: Button is null in cascade animation")
+			continue
+
 		button.modulate.a = 0.0
 		button.position.y += 30
 		button.scale = Vector2(0.9, 0.9)
