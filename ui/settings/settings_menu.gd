@@ -1571,9 +1571,9 @@ func _update_fps_counter(delta: float) -> void:
 	if not show_fps_counter:
 		return
 
-	var fps_label := content_panels.get(SettingsTab.GRAPHICS)
-	if fps_label:
-		var label := fps_label.find_child("FPSLabel", true, false) as Label
+	var fps_panel: Variant = content_panels.get(SettingsTab.GRAPHICS)
+	if fps_panel:
+		var label := fps_panel.find_child("FPSLabel", true, false) as Label
 		if label:
 			label.text = "FPS: %d" % Engine.get_frames_per_second()
 

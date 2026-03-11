@@ -1156,6 +1156,7 @@ func _animate_button_cascade() -> void:
 	button_container.modulate.a = 1.0
 
 	var buttons: Array = [create_button, join_button, settings_button, quit_button]
+	var delay: float = 0.0  # Add back the delay variable
 
 	# Null safety check for buttons
 	for button in buttons:
