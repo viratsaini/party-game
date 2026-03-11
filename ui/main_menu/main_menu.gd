@@ -142,6 +142,7 @@ var _button_use_counts: Dictionary = {}
 func _ready() -> void:
 	_load_player_profile()
 	_setup_ui()
+	_apply_modern_styling()  # Apply professional button styling
 	_setup_effects()
 	_setup_round2_effects()
 	_connect_signals()
@@ -249,6 +250,40 @@ func _setup_button_pivots() -> void:
 	var buttons: Array[Button] = [create_button, join_button, settings_button, quit_button]
 	for button in buttons:
 		button.pivot_offset = button.size / 2
+
+
+func _apply_modern_styling() -> void:
+	"""Apply professional button styles with modern gaming aesthetics."""
+	# Load procedural asset generator
+	var ui_generator = preload("res://assets/procedural_ui_assets.gd").new()
+	add_child(ui_generator)
+
+	# Apply professional button styles
+	ui_generator.apply_button_style(create_button, 0)  # PRIMARY
+	ui_generator.apply_button_style(join_button, 0)    # PRIMARY
+	ui_generator.apply_button_style(settings_button, 1) # SECONDARY
+	ui_generator.apply_button_style(quit_button, 3)    # DANGER
+
+	# Generate and apply professional background
+	var bg_generator = preload("res://assets/textures/background_generator.gd").new()
+	var bg_texture = bg_generator.generate_cyber_grid(1080, 1920, "battlezone")
+
+	var bg_rect = $Background as ColorRect
+	if bg_rect:
+		# Convert ColorRect to TextureRect for background
+		var tex_rect = TextureRect.new()
+		tex_rect.name = "BackgroundTexture"
+		tex_rect.texture = bg_texture
+		tex_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+		tex_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		tex_rect.stretch_mode = TextureRect.STRETCH_SCALE
+		add_child(tex_rect)
+		move_child(tex_rect, 0)  # Behind everything
+		bg_rect.color = Color(0.08, 0.08, 0.14, 0.5)  # Semi-transparent overlay
+
+	bg_generator.queue_free()
+
+	print("[MainMenu] Modern styling applied - buttons are now 140px with 48pt font")
 
 
 func _store_button_positions() -> void:

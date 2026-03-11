@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <defs>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <!-- User profile icon -->
+  <g fill="#F2F2F2" filter="url(#glow)">
+    <!-- Head -->
+    <circle cx="32" cy="20" r="12"/>
+    <!-- Body (shoulders) -->
+    <path d="M12,58 Q12,38 32,38 Q52,38 52,58 Z"/>
+  </g>
+</svg>

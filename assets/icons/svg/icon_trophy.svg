@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <defs>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFD700"/>
+      <stop offset="100%" style="stop-color:#B8860B"/>
+    </linearGradient>
+  </defs>
+  <!-- Trophy cup -->
+  <g filter="url(#glow)">
+    <!-- Cup body -->
+    <path d="M18,12 L46,12 L42,36 L22,36 Z" fill="url(#goldGrad)"/>
+    <!-- Left handle -->
+    <path d="M18,16 Q8,16 8,26 Q8,32 16,32" fill="none" stroke="#FFD700" stroke-width="4"/>
+    <!-- Right handle -->
+    <path d="M46,16 Q56,16 56,26 Q56,32 48,32" fill="none" stroke="#FFD700" stroke-width="4"/>
+    <!-- Stem -->
+    <rect x="28" y="36" width="8" height="10" fill="#FFD700"/>
+    <!-- Base -->
+    <rect x="20" y="46" width="24" height="6" rx="2" fill="#B8860B"/>
+  </g>
+</svg>
